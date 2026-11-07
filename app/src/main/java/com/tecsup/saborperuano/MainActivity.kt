@@ -8,24 +8,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModelProvider
-import com.tecsup.saborperuano.ui.lista.ListaScreen
-import com.tecsup.saborperuano.ui.lista.ListaViewModel
+import com.tecsup.saborperuano.ui.navigation.AppNav
 import com.tecsup.saborperuano.ui.theme.SaborPeruanoTheme
 
 class MainActivity : ComponentActivity() {
+    private val appContainer by lazy { AppContainer() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val viewModel = ViewModelProvider(this, ListaViewModel.Factory(AppContainer()))[
-            ListaViewModel::class.java
-        ]
 
         setContent {
             SaborPeruanoTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ListaScreen(
-                        viewModel = viewModel,
+                    AppNav(
+                        appContainer = appContainer,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

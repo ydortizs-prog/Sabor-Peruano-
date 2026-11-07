@@ -24,7 +24,11 @@ import com.tecsup.saborperuano.ui.components.Cargando
 import com.tecsup.saborperuano.ui.components.ErrorView
 
 @Composable
-fun ListaScreen(viewModel: ListaViewModel, modifier: Modifier = Modifier) {
+fun ListaScreen(
+    viewModel: ListaViewModel,
+    onAbrirDetalle: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
 
     Column(
@@ -49,7 +53,10 @@ fun ListaScreen(viewModel: ListaViewModel, modifier: Modifier = Modifier) {
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(actual.datos, key = { it.id }) { receta ->
-                                Card(modifier = Modifier.fillMaxWidth()) {
+                                Card(
+                                    onClick = { onAbrirDetalle(receta.id) },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
                                     Column(
                                         modifier = Modifier.padding(16.dp),
                                         verticalArrangement = Arrangement.spacedBy(4.dp)

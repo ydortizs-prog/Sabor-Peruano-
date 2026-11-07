@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Sabor Peruano</string>
     <string name="catalogo_vacio">Aún no hay recetas.</string>
+    <string name="detalle_volver">Volver al catálogo</string>
+    <string name="detalle_porciones">Porciones: %1$d</string>
+    <string name="detalle_ingredientes">Ingredientes</string>
+    <string name="detalle_preparacion">Preparación</string>
 </resources>

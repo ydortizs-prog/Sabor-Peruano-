@@ -18,13 +18,23 @@ class ItemRepositoryImpl(private val api: ApiService) : ItemRepository {
     override val items = catalogo.asStateFlow()
     override val favoritos = items.map { lista -> lista.filter(Item::esFavorito) }
 
-    override suspend fun refrescar(): Result<Int> = try {
+    override suspend fun refrescar(): Result<Int> = ejecutarPeticion {
         val recetas = api.listar().map(ItemDto::aModelo)
         catalogo.update { actuales ->
             val idsFavoritos = actuales.filter(Item::esFavorito).map(Item::id).toSet()
             recetas.map { it.copy(esFavorito = it.id in idsFavoritos) }
         }
-        Result.success(recetas.size)
+        recetas.size
+    }
+
+    override suspend fun obtenerDetalle(id: String): Result<Item> = ejecutarPeticion {
+        val detalle = api.obtenerDetalle(id).aModelo()
+        val esFavorito = catalogo.value.any { it.id == id && it.esFavorito }
+        detalle.copy(esFavorito = esFavorito)
+    }
+
+    private suspend fun <T> ejecutarPeticion(operacion: suspend () -> T): Result<T> = try {
+        Result.success(operacion())
     } catch (error: IOException) {
         Result.failure(error)
     } catch (error: HttpException) {
@@ -32,10 +42,6 @@ class ItemRepositoryImpl(private val api: ApiService) : ItemRepository {
     } catch (error: SerializationException) {
         Result.failure(error)
     }
-
-    override suspend fun obtenerDetalle(id: String): Result<Item> =
-        catalogo.value.firstOrNull { it.id == id }?.let { Result.success(it) }
-            ?: Result.failure(NoSuchElementException("Receta no encontrada."))
 
     override suspend fun alternarFavorito(id: String) {
         catalogo.update { lista ->
