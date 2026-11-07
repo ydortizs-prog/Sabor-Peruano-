@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Sabor Peruano</string>
+    <string name="catalogo_vacio">Aún no hay recetas.</string>
 </resources>
