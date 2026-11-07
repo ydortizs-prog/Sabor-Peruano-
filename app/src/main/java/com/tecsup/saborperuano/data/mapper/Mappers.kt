@@ -9,7 +9,8 @@ fun ItemDto.aEntity(esFavorito: Boolean): ItemEntity = ItemEntity(
     titulo = titulo,
     subtitulo = subtitulo,
     imagenUrl = imagenUrl,
-    esFavorito = esFavorito
+    esFavorito = esFavorito,
+    precioCentimos = precioCentimos?.takeIf { it > 0 }
 )
 
 fun ItemEntity.aModelo(): Item = Item(
@@ -17,7 +18,8 @@ fun ItemEntity.aModelo(): Item = Item(
     titulo = titulo,
     subtitulo = subtitulo,
     imagenUrl = imagenUrl,
-    esFavorito = esFavorito
+    esFavorito = esFavorito,
+    precioCentimos = precioCentimos?.takeIf { it > 0 }
 )
 
 fun ItemDto.aModelo(): Item = Item(
@@ -25,7 +27,5 @@ fun ItemDto.aModelo(): Item = Item(
     titulo = titulo,
     subtitulo = subtitulo,
     imagenUrl = imagenUrl,
-    porciones = porciones,
-    ingredientes = ingredientes,
-    preparacion = preparacion
+    precioCentimos = precioCentimos?.takeIf { it > 0 }
 )

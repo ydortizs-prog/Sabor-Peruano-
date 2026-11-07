@@ -6,19 +6,37 @@ import com.tecsup.saborperuano.data.auth.AuthRepository
 import com.tecsup.saborperuano.data.auth.FirebaseAuthRepository
 import com.tecsup.saborperuano.data.local.AppDatabase
 import com.tecsup.saborperuano.data.remote.RetrofitClient
+import com.tecsup.saborperuano.data.repository.CarritoRepository
 import com.tecsup.saborperuano.data.repository.ItemRepository
 import com.tecsup.saborperuano.data.repository.ItemRepositoryImpl
+import com.tecsup.saborperuano.notification.Notificador
+import com.tecsup.saborperuano.notification.NotificadorAndroid
+import kotlinx.serialization.json.Json
 
 class AppContainer private constructor(context: Context) {
     private val database = Room.databaseBuilder(
         context,
         AppDatabase::class.java,
         "sabor-peruano.db"
-    ).build()
+    ).addMigrations(AppDatabase.MIGRACION_1_2).build()
 
-    val itemRepository: ItemRepository = ItemRepositoryImpl(RetrofitClient.api, database)
+    private val preciosDePrueba: Map<String, Int> =
+        if ("precios-prueba.json" in context.assets.list("").orEmpty()) {
+            context.assets.open("precios-prueba.json").bufferedReader().use { archivo ->
+                Json.decodeFromString<Map<String, Int>>(archivo.readText())
+            }
+        } else {
+            emptyMap()
+        }
+
+    val itemRepository: ItemRepository =
+        ItemRepositoryImpl(RetrofitClient.api, database, preciosDePrueba)
+
+    fun crearCarritoDeSesion(): CarritoRepository = CarritoRepository()
 
     val authRepository: AuthRepository by lazy { FirebaseAuthRepository() }
+
+    val notificador: Notificador = NotificadorAndroid(context)
 
     companion object {
         @Volatile

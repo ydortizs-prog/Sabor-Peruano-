@@ -1,6 +1,6 @@
 package com.tecsup.saborperuano.ui.theme
 
-import android.app.Activity
+import androidx.compose.ui.graphics.Color
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +52,47 @@ fun SaborPeruanoTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
+        typography = Typography,
+        content = content
+    )
+}
+
+private val CatalogoClaro = lightColorScheme(
+    primary = Color(0xFF8D2828),
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFFFDAD7),
+    onPrimaryContainer = Color(0xFF3B0808),
+    secondary = Color(0xFF45614A),
+    secondaryContainer = Color(0xFFD7E8D3),
+    onSecondaryContainer = Color(0xFF17291B),
+    tertiaryContainer = Color(0xFFFBE4AF),
+    onTertiaryContainer = Color(0xFF362706),
+    background = Color(0xFFFFF8EE),
+    surface = Color(0xFFFFFCF7),
+    onSurface = Color(0xFF29201B),
+    onSurfaceVariant = Color(0xFF594741)
+)
+
+private val CatalogoOscuro = darkColorScheme(
+    primary = Color(0xFFFFB4AC),
+    onPrimary = Color(0xFF551716),
+    primaryContainer = Color(0xFF75302D),
+    onPrimaryContainer = Color(0xFFFFDAD7),
+    secondary = Color(0xFFB7D5B5),
+    secondaryContainer = Color(0xFF314B35),
+    onSecondaryContainer = Color(0xFFD7E8D3),
+    tertiaryContainer = Color(0xFF523E18),
+    onTertiaryContainer = Color(0xFFFBE4AF),
+    background = Color(0xFF191310),
+    surface = Color(0xFF241C18),
+    onSurface = Color(0xFFF5E7DC),
+    onSurfaceVariant = Color(0xFFD8C2B8)
+)
+
+@Composable
+fun TemaCatalogo(content: @Composable () -> Unit) {
+    MaterialTheme(
+        colorScheme = if (isSystemInDarkTheme()) CatalogoOscuro else CatalogoClaro,
         typography = Typography,
         content = content
     )

@@ -8,7 +8,5 @@ data class ItemDto(
     val titulo: String,
     val subtitulo: String,
     val imagenUrl: String? = null,
-    val porciones: Int? = null,
-    val ingredientes: List<String> = emptyList(),
-    val preparacion: List<String> = emptyList()
+    val precioCentimos: Int? = null
 )

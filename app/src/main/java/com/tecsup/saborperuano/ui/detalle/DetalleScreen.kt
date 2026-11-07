@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -24,14 +25,21 @@ import com.tecsup.saborperuano.domain.model.Item
 import com.tecsup.saborperuano.ui.UiState
 import com.tecsup.saborperuano.ui.components.Cargando
 import com.tecsup.saborperuano.ui.components.ErrorView
+import com.tecsup.saborperuano.ui.components.FotoReceta
+import com.tecsup.saborperuano.ui.components.PrecioPlato
+import com.tecsup.saborperuano.ui.components.SelectorCantidad
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.draw.clip
 
 @Composable
 fun DetalleScreen(
     viewModel: DetalleViewModel,
     onVolver: () -> Unit,
+    onAbrirCarrito: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
+    val cantidad by viewModel.cantidad.collectAsStateWithLifecycle()
     val errorFavorito by viewModel.errorFavorito.collectAsStateWithLifecycle()
 
     Column(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp)) {
@@ -43,10 +51,16 @@ fun DetalleScreen(
             when (val actual = estado) {
                 UiState.Cargando -> Cargando()
                 is UiState.Error -> ErrorView(actual.mensaje, viewModel::cargar)
-                is UiState.Exito -> RecetaDetalle(
-                    receta = actual.datos,
+                is UiState.Exito -> FichaProducto(
+                    plato = actual.datos,
+                    cantidad = cantidad,
                     errorFavorito = errorFavorito,
-                    onAlternarFavorito = viewModel::alternarFavorito
+                    onCambiarCantidad = viewModel::cambiarCantidad,
+                    onAlternarFavorito = viewModel::alternarFavorito,
+                    onAgregarAlCarrito = {
+                        if (viewModel.agregarAlCarrito()) onAbrirCarrito()
+                    },
+                    onAbrirCarrito = onAbrirCarrito
                 )
             }
         }
@@ -54,20 +68,25 @@ fun DetalleScreen(
 }
 
 @Composable
-private fun RecetaDetalle(
-    receta: Item,
+private fun FichaProducto(
+    plato: Item,
+    cantidad: Int,
     errorFavorito: String?,
-    onAlternarFavorito: () -> Unit
+    onCambiarCantidad: (Int) -> Unit,
+    onAlternarFavorito: () -> Unit,
+    onAgregarAlCarrito: () -> Unit,
+    onAbrirCarrito: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(receta.titulo, style = MaterialTheme.typography.headlineMedium)
-        Text(receta.subtitulo, style = MaterialTheme.typography.bodyLarge)
+        FotoReceta(plato, Modifier.fillMaxWidth().aspectRatio(1.8f).clip(MaterialTheme.shapes.large))
+        Text(plato.titulo, style = MaterialTheme.typography.headlineMedium)
+        Text(plato.subtitulo, style = MaterialTheme.typography.bodyLarge)
         OutlinedButton(onClick = onAlternarFavorito) {
-            val etiqueta = if (receta.esFavorito) {
+            val etiqueta = if (plato.esFavorito) {
                 R.string.favorito_quitar
             } else {
                 R.string.favorito_agregar
@@ -75,23 +94,18 @@ private fun RecetaDetalle(
             Text(stringResource(etiqueta))
         }
         errorFavorito?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        receta.porciones?.let {
-            Text(stringResource(R.string.detalle_porciones, it))
+        PrecioPlato(plato.precioCentimos)
+        val disponible = plato.precioCentimos != null
+        SelectorCantidad(cantidad, onCambiarCantidad, habilitado = disponible)
+        Button(
+            onClick = onAgregarAlCarrito,
+            enabled = disponible,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.carrito_agregar))
         }
-        Text(
-            stringResource(R.string.detalle_ingredientes),
-            style = MaterialTheme.typography.titleLarge
-        )
-        receta.ingredientes.forEach { ingrediente ->
-            Text(text = "• $ingrediente", modifier = Modifier.fillMaxWidth())
-        }
-
-        Text(
-            stringResource(R.string.detalle_preparacion),
-            style = MaterialTheme.typography.titleLarge
-        )
-        receta.preparacion.forEachIndexed { indice, paso ->
-            Text(text = "${indice + 1}. $paso", modifier = Modifier.fillMaxWidth())
+        TextButton(onClick = onAbrirCarrito) {
+            Text(stringResource(R.string.carrito_titulo))
         }
     }
 }

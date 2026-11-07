@@ -31,7 +31,7 @@ class FavoritosViewModel(private val repositorio: ItemRepository) : ViewModel() 
             try {
                 repositorio.favoritos.collect { _estado.value = UiState.Exito(it) }
             } catch (_: SQLiteException) {
-                _estado.value = UiState.Error("No se pudieron leer las recetas favoritas.")
+                _estado.value = UiState.Error("No se pudieron leer los platillos favoritos.")
             }
         }
     }

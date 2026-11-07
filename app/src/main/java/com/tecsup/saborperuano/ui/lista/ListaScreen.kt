@@ -1,19 +1,10 @@
 package com.tecsup.saborperuano.ui.lista
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -22,99 +13,147 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tecsup.saborperuano.R
-import com.tecsup.saborperuano.domain.model.Item
 import com.tecsup.saborperuano.ui.UiState
 import com.tecsup.saborperuano.ui.components.Cargando
 import com.tecsup.saborperuano.ui.components.ErrorView
+import com.tecsup.saborperuano.ui.components.TarjetaPlato
 
 @Composable
 fun ListaScreen(
     viewModel: ListaViewModel,
     onAbrirDetalle: (String) -> Unit,
     onAbrirFavoritos: () -> Unit,
+    onAbrirCarrito: () -> Unit,
+    unidadesCarrito: Int,
     onCerrarSesion: () -> Unit,
+    onAbrirAdmin: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val estado by viewModel.estado.collectAsStateWithLifecycle()
+    val estado by viewModel.catalogo.collectAsStateWithLifecycle()
     val sinConexion by viewModel.sinConexion.collectAsStateWithLifecycle()
+    val consulta by viewModel.consulta.collectAsStateWithLifecycle()
+    val categoria by viewModel.categoria.collectAsStateWithLifecycle()
 
-    Column(
-        modifier = modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.headlineMedium
-            )
-            TextButton(onClick = onAbrirFavoritos) {
-                Text(stringResource(R.string.favoritos_titulo))
-            }
-        }
-
-        TextButton(onClick = onCerrarSesion) {
-            Text(stringResource(R.string.login_salir))
-        }
-
-        if (sinConexion && (estado as? UiState.Exito)?.datos?.isNotEmpty() == true) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.tertiaryContainer
-            ) {
-                Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                    Text(stringResource(R.string.catalogo_sin_conexion))
-                    TextButton(onClick = viewModel::refrescar) {
-                        Text(stringResource(R.string.catalogo_reintentar))
+    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        when (val actual = estado) {
+            UiState.Cargando, is UiState.Error -> Column(Modifier.padding(16.dp)) {
+                EncabezadoCatalogo(onAbrirFavoritos, onAbrirCarrito, unidadesCarrito, onCerrarSesion, onAbrirAdmin)
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (actual is UiState.Error) {
+                        ErrorView(actual.mensaje, viewModel::refrescar)
+                    } else {
+                        Cargando()
                     }
                 }
             }
-        }
-
-        Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-            when (val actual = estado) {
-                UiState.Cargando -> Cargando()
-                is UiState.Error -> ErrorView(actual.mensaje, viewModel::refrescar)
-                is UiState.Exito -> {
-                    if (actual.datos.isEmpty()) {
-                        Text(stringResource(R.string.catalogo_vacio))
-                    } else {
-                        TarjetasRecetas(actual.datos, onAbrirDetalle)
+            is UiState.Exito -> LazyColumn(
+                modifier = Modifier.fillMaxSize().imePadding(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
+            ) {
+                item(key = "encabezado") {
+                    Column(
+                        modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        EncabezadoCatalogo(
+                            onAbrirFavoritos, onAbrirCarrito, unidadesCarrito, onCerrarSesion, onAbrirAdmin
+                        )
+                        OutlinedTextField(
+                            value = consulta,
+                            onValueChange = viewModel::buscar,
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text(stringResource(R.string.catalogo_buscar)) },
+                            shape = MaterialTheme.shapes.large,
+                            singleLine = true
+                        )
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(Categoria.entries, key = { it.name }) { opcion ->
+                                FilterChip(
+                                    selected = categoria == opcion,
+                                    onClick = { viewModel.seleccionarCategoria(opcion) },
+                                    label = { Text(stringResource(opcion.etiqueta)) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                )
+                            }
+                        }
+                        if (sinConexion) {
+                            Surface(
+                                shape = MaterialTheme.shapes.medium,
+                                color = MaterialTheme.colorScheme.tertiaryContainer
+                            ) {
+                                Column(Modifier.fillMaxWidth().padding(12.dp)) {
+                                    Text(stringResource(R.string.catalogo_sin_conexion))
+                                    TextButton(onClick = viewModel::refrescar) {
+                                        Text(stringResource(R.string.catalogo_reintentar))
+                                    }
+                                }
+                            }
+                        }
                     }
+                }
+                if (actual.datos.platos.isEmpty()) {
+                    item(key = "vacio") {
+                        Text(stringResource(
+                            if (actual.datos.catalogoVacio) R.string.catalogo_vacio
+                            else R.string.catalogo_sin_resultados
+                        ))
+                    }
+                }
+                items(actual.datos.platos, key = { it.id }) { plato ->
+                    TarjetaPlato(
+                        plato = plato,
+                        onAbrirDetalle = onAbrirDetalle,
+                        modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth()
+                    )
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun TarjetasRecetas(recetas: List<Item>, onAbrirDetalle: (String) -> Unit) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+private fun EncabezadoCatalogo(
+    onAbrirFavoritos: () -> Unit,
+    onAbrirCarrito: () -> Unit,
+    unidadesCarrito: Int,
+    onCerrarSesion: () -> Unit,
+    onAbrirAdmin: (() -> Unit)?
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.primary
     ) {
-        items(recetas, key = { it.id }) { receta ->
-            Card(
-                onClick = { onAbrirDetalle(receta.id) },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = receta.titulo,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = receta.subtitulo,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+        Column(
+            modifier = Modifier.padding(start = 20.dp, top = 20.dp, end = 16.dp, bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(stringResource(R.string.catalogo_marca), style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
+            Text(stringResource(R.string.catalogo_bajada), style = MaterialTheme.typography.bodyMedium)
+            FlowRow {
+                val colores = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+                TextButton(onClick = onAbrirFavoritos, colors = colores) {
+                    Text(stringResource(R.string.favoritos_titulo))
+                }
+                TextButton(onClick = onAbrirCarrito, colors = colores) {
+                    Text(stringResource(R.string.carrito_acceso, unidadesCarrito))
+                }
+                if (onAbrirAdmin != null) {
+                    TextButton(onClick = onAbrirAdmin, colors = colores) {
+                        Text(stringResource(R.string.admin_panel))
+                    }
+                }
+                TextButton(onClick = onCerrarSesion, colors = colores) {
+                    Text(stringResource(R.string.login_salir))
                 }
             }
         }

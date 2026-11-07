@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.tecsup.saborperuano.AppContainer
+import com.tecsup.saborperuano.data.repository.CarritoRepository
 import com.tecsup.saborperuano.data.repository.ItemRepository
 import com.tecsup.saborperuano.domain.model.Item
+import com.tecsup.saborperuano.domain.model.MAX_UNIDADES_POR_PLATO
 import com.tecsup.saborperuano.ui.UiState
 import java.io.IOException
 import kotlinx.coroutines.Job
@@ -21,7 +23,8 @@ import retrofit2.HttpException
 
 class DetalleViewModel(
     private val repositorio: ItemRepository,
-    private val id: String
+    private val id: String,
+    private val carrito: CarritoRepository
 ) : ViewModel() {
     private val estadoDetalle = MutableStateFlow<UiState<Item>>(UiState.Cargando)
     val estado: StateFlow<UiState<Item>> = combine(estadoDetalle, repositorio.favoritos) { detalle, favoritos ->
@@ -36,6 +39,12 @@ class DetalleViewModel(
     private val _errorFavorito = MutableStateFlow<String?>(null)
     val errorFavorito: StateFlow<String?> = _errorFavorito.asStateFlow()
     private var carga: Job? = null
+    private val _cantidad = MutableStateFlow(1)
+    val cantidad: StateFlow<Int> = _cantidad.asStateFlow()
+
+    fun cambiarCantidad(cantidad: Int) {
+        _cantidad.value = cantidad.coerceIn(1, MAX_UNIDADES_POR_PLATO)
+    }
 
     init {
         cargar()
@@ -53,6 +62,11 @@ class DetalleViewModel(
         }
     }
 
+    fun agregarAlCarrito(): Boolean {
+        val plato = (estado.value as? UiState.Exito)?.datos ?: return false
+        return carrito.agregar(plato, cantidad.value)
+    }
+
     fun alternarFavorito() {
         if (estado.value !is UiState.Exito) return
 
@@ -67,19 +81,20 @@ class DetalleViewModel(
     }
 
     private fun mensajeDe(error: Throwable): String = when {
-        error is HttpException && error.code() == 404 -> "No encontramos esta receta."
+        error is HttpException && error.code() == 404 -> "No encontramos este platillo."
         error is IOException -> "No se pudo conectar. Revisa tu conexión."
-        else -> "No se pudo cargar la receta."
+        else -> "No se pudo cargar el platillo."
     }
 
     class Factory(
         private val appContainer: AppContainer,
-        private val id: String
+        private val id: String,
+        private val carrito: CarritoRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             require(modelClass == DetalleViewModel::class.java)
             @Suppress("UNCHECKED_CAST")
-            return DetalleViewModel(appContainer.itemRepository, id) as T
+            return DetalleViewModel(appContainer.itemRepository, id, carrito) as T
         }
     }
 }

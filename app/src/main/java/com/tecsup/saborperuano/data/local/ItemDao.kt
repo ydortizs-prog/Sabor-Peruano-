@@ -19,6 +19,9 @@ interface ItemDao {
     @Query("SELECT EXISTS(SELECT 1 FROM items WHERE id = :id AND esFavorito = 1)")
     suspend fun esFavorito(id: String): Boolean
 
+    @Query("SELECT precioCentimos FROM items WHERE id = :id")
+    suspend fun precioCentimos(id: String): Int?
+
     @Query("SELECT COUNT(*) FROM items")
     suspend fun contar(): Int
 

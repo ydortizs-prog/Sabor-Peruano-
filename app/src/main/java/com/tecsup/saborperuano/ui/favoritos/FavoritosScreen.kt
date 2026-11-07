@@ -20,7 +20,7 @@ import com.tecsup.saborperuano.R
 import com.tecsup.saborperuano.ui.UiState
 import com.tecsup.saborperuano.ui.components.Cargando
 import com.tecsup.saborperuano.ui.components.ErrorView
-import com.tecsup.saborperuano.ui.lista.TarjetasRecetas
+import com.tecsup.saborperuano.ui.components.TarjetasRecetas
 
 @Composable
 fun FavoritosScreen(

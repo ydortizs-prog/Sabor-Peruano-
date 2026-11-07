@@ -3,6 +3,7 @@ package com.tecsup.saborperuano.data.auth
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import com.tecsup.saborperuano.domain.model.Rol
 import com.tecsup.saborperuano.domain.model.Sesion
 import kotlinx.coroutines.CancellationException
@@ -31,6 +32,12 @@ class FirebaseAuthRepository(
     }
 
     override suspend fun sesionActual(): Sesion? = auth.currentUser?.let { leerSesion(it) }
+
+    override suspend fun confirmarAdministrador(uid: String): Boolean {
+        if (auth.currentUser?.uid != uid) return false
+        val documento = firestore.collection("usuarios").document(uid).get(Source.SERVER).await()
+        return auth.currentUser?.uid == uid && documento.get("rol") == "admin"
+    }
 
     override fun cerrarSesion() = auth.signOut()
 
