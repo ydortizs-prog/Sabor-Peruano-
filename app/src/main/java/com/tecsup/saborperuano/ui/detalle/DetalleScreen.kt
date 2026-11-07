@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,24 +32,33 @@ fun DetalleScreen(
     modifier: Modifier = Modifier
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
+    val errorFavorito by viewModel.errorFavorito.collectAsStateWithLifecycle()
 
     Column(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         TextButton(onClick = onVolver) {
-            Text(stringResource(R.string.detalle_volver))
+            Text(stringResource(R.string.volver))
         }
 
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             when (val actual = estado) {
                 UiState.Cargando -> Cargando()
                 is UiState.Error -> ErrorView(actual.mensaje, viewModel::cargar)
-                is UiState.Exito -> RecetaDetalle(actual.datos)
+                is UiState.Exito -> RecetaDetalle(
+                    receta = actual.datos,
+                    errorFavorito = errorFavorito,
+                    onAlternarFavorito = viewModel::alternarFavorito
+                )
             }
         }
     }
 }
 
 @Composable
-private fun RecetaDetalle(receta: Item) {
+private fun RecetaDetalle(
+    receta: Item,
+    errorFavorito: String?,
+    onAlternarFavorito: () -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             .padding(bottom = 16.dp),
@@ -56,6 +66,15 @@ private fun RecetaDetalle(receta: Item) {
     ) {
         Text(receta.titulo, style = MaterialTheme.typography.headlineMedium)
         Text(receta.subtitulo, style = MaterialTheme.typography.bodyLarge)
+        OutlinedButton(onClick = onAlternarFavorito) {
+            val etiqueta = if (receta.esFavorito) {
+                R.string.favorito_quitar
+            } else {
+                R.string.favorito_agregar
+            }
+            Text(stringResource(etiqueta))
+        }
+        errorFavorito?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         receta.porciones?.let {
             Text(stringResource(R.string.detalle_porciones, it))
         }

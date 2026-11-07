@@ -1,5 +1,6 @@
 package com.tecsup.saborperuano.ui.detalle
 
+import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -10,8 +11,11 @@ import com.tecsup.saborperuano.ui.UiState
 import java.io.IOException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
@@ -19,8 +23,18 @@ class DetalleViewModel(
     private val repositorio: ItemRepository,
     private val id: String
 ) : ViewModel() {
-    private val _estado = MutableStateFlow<UiState<Item>>(UiState.Cargando)
-    val estado: StateFlow<UiState<Item>> = _estado.asStateFlow()
+    private val estadoDetalle = MutableStateFlow<UiState<Item>>(UiState.Cargando)
+    val estado: StateFlow<UiState<Item>> = combine(estadoDetalle, repositorio.favoritos) { detalle, favoritos ->
+        when (detalle) {
+            is UiState.Exito -> UiState.Exito(
+                detalle.datos.copy(esFavorito = favoritos.any { it.id == id })
+            )
+            else -> detalle
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.Cargando)
+
+    private val _errorFavorito = MutableStateFlow<String?>(null)
+    val errorFavorito: StateFlow<String?> = _errorFavorito.asStateFlow()
     private var carga: Job? = null
 
     init {
@@ -31,11 +45,24 @@ class DetalleViewModel(
         if (carga?.isActive == true) return
 
         carga = viewModelScope.launch {
-            _estado.value = UiState.Cargando
-            _estado.value = repositorio.obtenerDetalle(id).fold(
+            estadoDetalle.value = UiState.Cargando
+            estadoDetalle.value = repositorio.obtenerDetalle(id).fold(
                 onSuccess = { UiState.Exito(it) },
                 onFailure = { UiState.Error(mensajeDe(it)) }
             )
+        }
+    }
+
+    fun alternarFavorito() {
+        if (estado.value !is UiState.Exito) return
+
+        viewModelScope.launch {
+            _errorFavorito.value = null
+            try {
+                repositorio.alternarFavorito(id)
+            } catch (_: SQLiteException) {
+                _errorFavorito.value = "No se pudo actualizar el favorito. Inténtalo de nuevo."
+            }
         }
     }
 

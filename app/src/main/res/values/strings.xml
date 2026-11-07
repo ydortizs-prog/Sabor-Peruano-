@@ -1,8 +1,12 @@
 <resources>
     <string name="app_name">Sabor Peruano</string>
     <string name="catalogo_vacio">Aún no hay recetas.</string>
-    <string name="detalle_volver">Volver al catálogo</string>
+    <string name="volver">Volver</string>
     <string name="detalle_porciones">Porciones: %1$d</string>
     <string name="detalle_ingredientes">Ingredientes</string>
     <string name="detalle_preparacion">Preparación</string>
+    <string name="favoritos_titulo">Favoritos</string>
+    <string name="favoritos_vacio">Aún no tienes recetas favoritas.</string>
+    <string name="favorito_agregar">Agregar a favoritos</string>
+    <string name="favorito_quitar">Quitar de favoritos</string>
 </resources>
