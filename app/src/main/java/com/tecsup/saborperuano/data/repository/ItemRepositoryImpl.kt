@@ -1,29 +1,36 @@
 package com.tecsup.saborperuano.data.repository
 
+import com.tecsup.saborperuano.data.mapper.aModelo
+import com.tecsup.saborperuano.data.remote.ApiService
+import com.tecsup.saborperuano.data.remote.dto.ItemDto
 import com.tecsup.saborperuano.domain.model.Item
+import java.io.IOException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.SerializationException
+import retrofit2.HttpException
 
-class ItemRepositoryImpl : ItemRepository {
-    private val recetas = listOf(
-        Item("aji-de-gallina", "Ají de gallina", "Pollo deshilachado en crema de ají amarillo."),
-        Item("lomo-saltado", "Lomo saltado", "Carne salteada con cebolla, tomate y papas fritas."),
-        Item("causa-limena", "Causa limeña", "Capas de papa amarilla sazonadas con limón y ají."),
-        Item("arroz-con-pollo", "Arroz con pollo", "Arroz al culantro con pollo y verduras.")
-    )
+class ItemRepositoryImpl(private val api: ApiService) : ItemRepository {
     private val catalogo = MutableStateFlow<List<Item>>(emptyList())
 
     override val items = catalogo.asStateFlow()
     override val favoritos = items.map { lista -> lista.filter(Item::esFavorito) }
 
-    override suspend fun refrescar(): Result<Int> {
+    override suspend fun refrescar(): Result<Int> = try {
+        val recetas = api.listar().map(ItemDto::aModelo)
         catalogo.update { actuales ->
             val idsFavoritos = actuales.filter(Item::esFavorito).map(Item::id).toSet()
             recetas.map { it.copy(esFavorito = it.id in idsFavoritos) }
         }
-        return Result.success(recetas.size)
+        Result.success(recetas.size)
+    } catch (error: IOException) {
+        Result.failure(error)
+    } catch (error: HttpException) {
+        Result.failure(error)
+    } catch (error: SerializationException) {
+        Result.failure(error)
     }
 
     override suspend fun obtenerDetalle(id: String): Result<Item> =
