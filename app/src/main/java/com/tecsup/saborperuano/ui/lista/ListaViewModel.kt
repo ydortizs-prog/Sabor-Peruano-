@@ -8,18 +8,33 @@ import com.tecsup.saborperuano.data.repository.ItemRepository
 import com.tecsup.saborperuano.domain.model.Item
 import com.tecsup.saborperuano.ui.UiState
 import java.io.IOException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
 
 class ListaViewModel(private val repositorio: ItemRepository) : ViewModel() {
-    private val _estado = MutableStateFlow<UiState<List<Item>>>(UiState.Cargando)
-    val estado: StateFlow<UiState<List<Item>>> = _estado.asStateFlow()
+    private val estadoRefresco = MutableStateFlow<UiState<Unit>>(UiState.Cargando)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val estado: StateFlow<UiState<List<Item>>> = estadoRefresco
+        .flatMapLatest { refresco ->
+            when (refresco) {
+                UiState.Cargando -> flowOf(UiState.Cargando)
+                is UiState.Error -> flowOf(refresco)
+                is UiState.Exito -> repositorio.items.map { UiState.Exito(it) }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, UiState.Cargando)
+
     private var carga: Job? = null
 
     init {
@@ -30,10 +45,10 @@ class ListaViewModel(private val repositorio: ItemRepository) : ViewModel() {
         if (carga?.isActive == true) return
 
         carga = viewModelScope.launch {
-            _estado.value = UiState.Cargando
-            repositorio.refrescar().fold(
-                onSuccess = { _estado.value = UiState.Exito(repositorio.items.first()) },
-                onFailure = { _estado.value = UiState.Error(mensajeDe(it)) }
+            estadoRefresco.value = UiState.Cargando
+            estadoRefresco.value = repositorio.refrescar().fold(
+                onSuccess = { UiState.Exito(Unit) },
+                onFailure = { UiState.Error(mensajeDe(it)) }
             )
         }
     }

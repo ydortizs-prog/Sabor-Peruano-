@@ -1,37 +1,54 @@
 package com.tecsup.saborperuano.data.repository
 
+import android.database.sqlite.SQLiteException
+import androidx.room.withTransaction
+import com.tecsup.saborperuano.data.local.AppDatabase
+import com.tecsup.saborperuano.data.local.ItemEntity
+import com.tecsup.saborperuano.data.mapper.aEntity
 import com.tecsup.saborperuano.data.mapper.aModelo
 import com.tecsup.saborperuano.data.remote.ApiService
-import com.tecsup.saborperuano.data.remote.dto.ItemDto
 import com.tecsup.saborperuano.domain.model.Item
 import java.io.IOException
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
 
-class ItemRepositoryImpl(private val api: ApiService) : ItemRepository {
-    private val catalogo = MutableStateFlow<List<Item>>(emptyList())
+class ItemRepositoryImpl(
+    private val api: ApiService,
+    private val database: AppDatabase
+) : ItemRepository {
+    private val dao = database.itemDao()
 
-    override val items = catalogo.asStateFlow()
-    override val favoritos = items.map { lista -> lista.filter(Item::esFavorito) }
+    override val items = dao.todos()
+        .map { lista -> lista.map(ItemEntity::aModelo) }
+        .distinctUntilChanged()
+
+    override val favoritos = dao.favoritos()
+        .map { lista -> lista.map(ItemEntity::aModelo) }
+        .distinctUntilChanged()
 
     override suspend fun refrescar(): Result<Int> = ejecutarPeticion {
-        val recetas = api.listar().map(ItemDto::aModelo)
-        catalogo.update { actuales ->
-            val idsFavoritos = actuales.filter(Item::esFavorito).map(Item::id).toSet()
-            recetas.map { it.copy(esFavorito = it.id in idsFavoritos) }
+        val recetas = api.listar()
+        database.withTransaction {
+            val idsFavoritos = dao.idsFavoritos().toSet()
+            dao.guardarTodos(recetas.map { it.aEntity(esFavorito = it.id in idsFavoritos) })
         }
         recetas.size
     }
 
     override suspend fun obtenerDetalle(id: String): Result<Item> = ejecutarPeticion {
         val detalle = api.obtenerDetalle(id).aModelo()
-        val esFavorito = catalogo.value.any { it.id == id && it.esFavorito }
-        detalle.copy(esFavorito = esFavorito)
+        detalle.copy(esFavorito = dao.esFavorito(id))
     }
+
+    override suspend fun alternarFavorito(id: String) = dao.alternarFavorito(id)
+
+    override suspend fun cantidadGuardada(): Int = dao.contar()
+
+    override suspend fun cantidadFavoritos(): Int = dao.contarFavoritos()
+
+    override suspend fun limpiarCache() = dao.borrarTodo()
 
     private suspend fun <T> ejecutarPeticion(operacion: suspend () -> T): Result<T> = try {
         Result.success(operacion())
@@ -41,19 +58,7 @@ class ItemRepositoryImpl(private val api: ApiService) : ItemRepository {
         Result.failure(error)
     } catch (error: SerializationException) {
         Result.failure(error)
-    }
-
-    override suspend fun alternarFavorito(id: String) {
-        catalogo.update { lista ->
-            lista.map { if (it.id == id) it.copy(esFavorito = !it.esFavorito) else it }
-        }
-    }
-
-    override suspend fun cantidadGuardada(): Int = catalogo.value.size
-
-    override suspend fun cantidadFavoritos(): Int = catalogo.value.count(Item::esFavorito)
-
-    override suspend fun limpiarCache() {
-        catalogo.value = emptyList()
+    } catch (error: SQLiteException) {
+        Result.failure(error)
     }
 }

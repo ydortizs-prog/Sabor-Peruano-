@@ -16,6 +16,9 @@ interface ItemDao {
     @Query("SELECT id FROM items WHERE esFavorito = 1")
     suspend fun idsFavoritos(): List<String>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM items WHERE id = :id AND esFavorito = 1)")
+    suspend fun esFavorito(id: String): Boolean
+
     @Query("SELECT COUNT(*) FROM items")
     suspend fun contar(): Int
 

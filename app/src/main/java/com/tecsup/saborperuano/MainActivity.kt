@@ -12,7 +12,7 @@ import com.tecsup.saborperuano.ui.navigation.AppNav
 import com.tecsup.saborperuano.ui.theme.SaborPeruanoTheme
 
 class MainActivity : ComponentActivity() {
-    private val appContainer by lazy { AppContainer() }
+    private val appContainer by lazy { AppContainer.obtener(applicationContext) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
