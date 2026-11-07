@@ -1,6 +1,7 @@
 [versions]
 # Firebase Auth 25.0.0 requiere metadatos Kotlin más nuevos que los del compilador actual.
 firebaseBom = "34.19.0"
+coroutines = "1.10.2"
 googleServices = "4.5.0"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
@@ -19,6 +20,7 @@ room = "2.8.5"
 composeBom = "2026.02.01"
 
 [libraries]
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }

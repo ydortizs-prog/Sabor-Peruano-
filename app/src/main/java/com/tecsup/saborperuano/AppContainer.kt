@@ -2,6 +2,8 @@ package com.tecsup.saborperuano
 
 import android.content.Context
 import androidx.room.Room
+import com.tecsup.saborperuano.data.auth.AuthRepository
+import com.tecsup.saborperuano.data.auth.FirebaseAuthRepository
 import com.tecsup.saborperuano.data.local.AppDatabase
 import com.tecsup.saborperuano.data.remote.RetrofitClient
 import com.tecsup.saborperuano.data.repository.ItemRepository
@@ -15,6 +17,8 @@ class AppContainer private constructor(context: Context) {
     ).build()
 
     val itemRepository: ItemRepository = ItemRepositoryImpl(RetrofitClient.api, database)
+
+    val authRepository: AuthRepository by lazy { FirebaseAuthRepository() }
 
     companion object {
         @Volatile

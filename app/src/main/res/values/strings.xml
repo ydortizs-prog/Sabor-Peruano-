@@ -11,4 +11,9 @@
     <string name="favorito_quitar">Quitar de favoritos</string>
     <string name="catalogo_sin_conexion">Sin conexión. Mostrando recetas guardadas.</string>
     <string name="catalogo_reintentar">Reintentar</string>
+    <string name="login_correo">Correo electrónico</string>
+    <string name="login_clave">Contraseña</string>
+    <string name="login_entrar">Iniciar sesión</string>
+    <string name="login_salir">Cerrar sesión</string>
+    <string name="login_reintentar_sesion">Reintentar recuperar sesión</string>
 </resources>

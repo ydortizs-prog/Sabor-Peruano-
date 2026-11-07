@@ -32,6 +32,7 @@ fun ListaScreen(
     viewModel: ListaViewModel,
     onAbrirDetalle: (String) -> Unit,
     onAbrirFavoritos: () -> Unit,
+    onCerrarSesion: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
@@ -54,6 +55,10 @@ fun ListaScreen(
             TextButton(onClick = onAbrirFavoritos) {
                 Text(stringResource(R.string.favoritos_titulo))
             }
+        }
+
+        TextButton(onClick = onCerrarSesion) {
+            Text(stringResource(R.string.login_salir))
         }
 
         if (sinConexion && (estado as? UiState.Exito)?.datos?.isNotEmpty() == true) {
