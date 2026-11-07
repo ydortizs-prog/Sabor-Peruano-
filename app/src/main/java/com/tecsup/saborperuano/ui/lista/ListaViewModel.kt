@@ -22,18 +22,29 @@ import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
 
 class ListaViewModel(private val repositorio: ItemRepository) : ViewModel() {
-    private val estadoRefresco = MutableStateFlow<UiState<Unit>>(UiState.Cargando)
+    private val resultadoRefresco = MutableStateFlow<Result<Int>?>(null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val estado: StateFlow<UiState<List<Item>>> = estadoRefresco
-        .flatMapLatest { refresco ->
-            when (refresco) {
-                UiState.Cargando -> flowOf(UiState.Cargando)
-                is UiState.Error -> flowOf(refresco)
-                is UiState.Exito -> repositorio.items.map { UiState.Exito(it) }
+    val estado: StateFlow<UiState<List<Item>>> = resultadoRefresco
+        .flatMapLatest { resultado ->
+            val error = resultado?.exceptionOrNull()
+            when {
+                resultado == null -> flowOf(UiState.Cargando)
+                error != null && error !is IOException -> flowOf(UiState.Error(mensajeDe(error)))
+                else -> repositorio.items.map { recetas ->
+                    if (recetas.isEmpty() && error != null) {
+                        UiState.Error(mensajeDe(error))
+                    } else {
+                        UiState.Exito(recetas)
+                    }
+                }
             }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, UiState.Cargando)
+
+    val sinConexion: StateFlow<Boolean> = resultadoRefresco
+        .map { it?.exceptionOrNull() is IOException }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private var carga: Job? = null
 
@@ -45,11 +56,8 @@ class ListaViewModel(private val repositorio: ItemRepository) : ViewModel() {
         if (carga?.isActive == true) return
 
         carga = viewModelScope.launch {
-            estadoRefresco.value = UiState.Cargando
-            estadoRefresco.value = repositorio.refrescar().fold(
-                onSuccess = { UiState.Exito(Unit) },
-                onFailure = { UiState.Error(mensajeDe(it)) }
-            )
+            resultadoRefresco.value = null
+            resultadoRefresco.value = repositorio.refrescar()
         }
     }
 

@@ -9,4 +9,6 @@
     <string name="favoritos_vacio">Aún no tienes recetas favoritas.</string>
     <string name="favorito_agregar">Agregar a favoritos</string>
     <string name="favorito_quitar">Quitar de favoritos</string>
+    <string name="catalogo_sin_conexion">Sin conexión. Mostrando recetas guardadas.</string>
+    <string name="catalogo_reintentar">Reintentar</string>
 </resources>

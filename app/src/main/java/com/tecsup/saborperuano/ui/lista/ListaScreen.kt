@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,6 +35,7 @@ fun ListaScreen(
     modifier: Modifier = Modifier
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
+    val sinConexion by viewModel.sinConexion.collectAsStateWithLifecycle()
 
     Column(
         modifier = modifier.fillMaxSize().padding(16.dp),
@@ -51,6 +53,21 @@ fun ListaScreen(
             )
             TextButton(onClick = onAbrirFavoritos) {
                 Text(stringResource(R.string.favoritos_titulo))
+            }
+        }
+
+        if (sinConexion && (estado as? UiState.Exito)?.datos?.isNotEmpty() == true) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.tertiaryContainer
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                    Text(stringResource(R.string.catalogo_sin_conexion))
+                    TextButton(onClick = viewModel::refrescar) {
+                        Text(stringResource(R.string.catalogo_reintentar))
+                    }
+                }
             }
         }
 
