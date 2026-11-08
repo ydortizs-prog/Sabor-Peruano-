@@ -22,12 +22,18 @@ import kotlinx.coroutines.flow.update
 
 internal enum class Entrega { RECOJO, DELIVERY }
 
+internal enum class MetodoPago(val etiqueta: Int, val nombre: String) {
+    YAPE(R.string.pedido_pago_yape, "Yape"),
+    EFECTIVO(R.string.pedido_pago_efectivo, "Efectivo")
+}
+
 internal data class DatosPedido(
     val nombre: String = "",
     val telefono: String = "",
     val entrega: Entrega = Entrega.RECOJO,
     val direccion: String = "",
-    val observaciones: String = ""
+    val observaciones: String = "",
+    val metodoPago: MetodoPago? = null
 ) {
     val nombreValido: Boolean get() = nombre.isNotBlank()
     val telefonoValido: Boolean get() =
@@ -67,6 +73,7 @@ internal class ConfirmarPedidoViewModel(
     fun entrega(valor: Entrega) = _datos.update { it.copy(entrega = valor) }
     fun direccion(valor: String) = _datos.update { it.copy(direccion = valor) }
     fun observaciones(valor: String) = _datos.update { it.copy(observaciones = valor) }
+    fun metodoPago(valor: MetodoPago) = _datos.update { it.copy(metodoPago = valor) }
 
     fun guardar() {
         val estado = _envio.value

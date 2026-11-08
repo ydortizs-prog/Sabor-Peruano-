@@ -11,4 +11,12 @@
     <string name="pedido_whatsapp_abrir">Abrir WhatsApp</string>
     <string name="pedido_whatsapp_error">No se pudo abrir WhatsApp ni un navegador.</string>
     <string name="pedido_whatsapp_directo">Confirma el envío desde WhatsApp. El restaurante te responderá por el chat.</string>
+    <string name="pedido_metodo_pago">Método de pago</string>
+    <string name="pedido_pago_yape">Yape</string>
+    <string name="pedido_pago_efectivo">Efectivo</string>
+    <string name="pedido_pago_requerido">Selecciona un método de pago para continuar.</string>
+    <string name="pedido_pago_elegido">Método de pago: %1$s</string>
+    <string name="pedido_pago_yape_manual">Confirma el importe final y los datos de Yape con el restaurante por WhatsApp antes de pagar.</string>
+    <string name="pedido_pago_efectivo_delivery">Paga en efectivo al recibir el pedido.</string>
+    <string name="pedido_pago_efectivo_recojo">Paga en efectivo al recoger el pedido.</string>
 </resources>

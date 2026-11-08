@@ -43,6 +43,10 @@ internal fun mensajeParaWhatsApp(
         appendLine("Total: ${soles(totalCentimos)}")
     }
     appendLine("Entrega: ${if (delivery) "Delivery" else "Recojo"}")
+    contacto.metodoPago?.let { metodo ->
+        appendLine("Método de pago: ${metodo.nombre}")
+        if (metodo == MetodoPago.YAPE) appendLine("Coordinar el pago por Yape con el restaurante.")
+    }
     if (delivery) appendLine("Dirección: ${contacto.direccion.trim()}")
     if (contacto.observaciones.isNotBlank()) {
         appendLine("Observaciones: ${contacto.observaciones.trim()}")

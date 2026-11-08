@@ -8,6 +8,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -24,6 +26,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -38,9 +41,17 @@ import com.tecsup.saborperuano.R
 import com.tecsup.saborperuano.ui.components.soles
 
 @Composable
-internal fun ConfirmarPedidoScreen(viewModel: ConfirmarPedidoViewModel, onVolver: () -> Unit) {
+internal fun ConfirmarPedidoScreen(
+    viewModel: ConfirmarPedidoViewModel,
+    onVolver: () -> Unit,
+    onAbrirWhatsApp: () -> Unit = {},
+    onPedidoGuardado: (String) -> Unit = {}
+) {
     val envio by viewModel.envio.collectAsStateWithLifecycle()
     val recibo = envio as? EnvioPedido.Guardado
+    LaunchedEffect(recibo?.pedido?.pedidoId) {
+        recibo?.pedido?.pedidoId?.let(onPedidoGuardado)
+    }
     val enviando = envio is EnvioPedido.Guardando
     val errorEnvio = envio as? EnvioPedido.Error
     BackHandler(enviando) {}
@@ -50,6 +61,10 @@ internal fun ConfirmarPedidoScreen(viewModel: ConfirmarPedidoViewModel, onVolver
     var verResumen by rememberSaveable { mutableStateOf(false) }
     var errorWhatsApp by rememberSaveable { mutableStateOf(false) }
     val numeroWhatsApp = stringResource(R.string.whatsapp_restaurante_numero)
+    val sePuedeGuardar = viewModel.envioHabilitado && datos.entrega == Entrega.RECOJO
+    val porWhatsApp = !sePuedeGuardar && numeroWhatsApp.isNotBlank()
+    val metodoPago = datos.metodoPago
+    val puedeVerResumen = datos.valido && (!porWhatsApp || metodoPago != null)
     val context = LocalContext.current
 
     Surface(Modifier.fillMaxSize()) {
@@ -63,7 +78,7 @@ internal fun ConfirmarPedidoScreen(viewModel: ConfirmarPedidoViewModel, onVolver
                 Text(stringResource(R.string.pedido_guardado), style = MaterialTheme.typography.headlineMedium)
                 Text(stringResource(R.string.pedido_numero, recibo.pedido.pedidoId))
                 Text(stringResource(R.string.carrito_total, soles(recibo.pedido.totalCentimos)))
-                CompartirPedidoWhatsApp(recibo)
+                CompartirPedidoWhatsApp(recibo, onAbrirWhatsApp)
                 return@Column
             }
             Text(stringResource(R.string.pedido_datos), style = MaterialTheme.typography.headlineMedium)
@@ -96,22 +111,27 @@ internal fun ConfirmarPedidoScreen(viewModel: ConfirmarPedidoViewModel, onVolver
             }
             CampoPedido(datos.observaciones, viewModel::observaciones, R.string.pedido_observaciones,
                 multilinea = true)
+            if (porWhatsApp) {
+                SelectorMetodoPago(
+                    seleccionado = metodoPago,
+                    onSeleccionar = viewModel::metodoPago,
+                    mostrarError = mostrarErrores && metodoPago == null
+                )
+            }
             Text(stringResource(R.string.pedido_resumen), style = MaterialTheme.typography.titleLarge)
             ResumenDePlatos(resumen, datos.entrega)
             Button(
                 onClick = {
                     mostrarErrores = true
                     errorWhatsApp = false
-                    verResumen = datos.valido
+                    verResumen = puedeVerResumen
                 },
                 modifier = Modifier.fillMaxWidth()
             ) { Text(stringResource(R.string.pedido_previsualizar)) }
         }
     }
 
-    if (verResumen && datos.valido && resumen.lineas.isNotEmpty()) {
-        val sePuedeGuardar = viewModel.envioHabilitado && datos.entrega == Entrega.RECOJO
-        val porWhatsApp = !sePuedeGuardar && numeroWhatsApp.isNotBlank()
+    if (verResumen && puedeVerResumen && resumen.lineas.isNotEmpty()) {
         AlertDialog(
             onDismissRequest = { if (!enviando) verResumen = false },
             title = { Text(stringResource(R.string.pedido_resumen)) },
@@ -128,7 +148,12 @@ internal fun ConfirmarPedidoScreen(viewModel: ConfirmarPedidoViewModel, onVolver
                     if (datos.entrega == Entrega.DELIVERY) Text(datos.direccion.trim())
                     if (datos.observaciones.isNotBlank()) Text(datos.observaciones.trim())
                     ResumenDePlatos(resumen, datos.entrega)
-                    if (porWhatsApp) {
+                    if (porWhatsApp && metodoPago != null) {
+                        Text(
+                            stringResource(R.string.pedido_pago_elegido, stringResource(metodoPago.etiqueta)),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+                        Text(stringResource(metodoPago.instruccion(datos.entrega)))
                         Text(stringResource(R.string.pedido_whatsapp_directo))
                         if (errorWhatsApp) {
                             Text(
@@ -156,7 +181,10 @@ internal fun ConfirmarPedidoScreen(viewModel: ConfirmarPedidoViewModel, onVolver
                         errorWhatsApp = !abrirWhatsApp(
                             context, numeroWhatsApp, mensajeParaWhatsApp(datos, resumen)
                         )
-                        if (!errorWhatsApp) verResumen = false
+                        if (!errorWhatsApp) {
+                            verResumen = false
+                            onAbrirWhatsApp()
+                        }
                     }) { Text(stringResource(R.string.pedido_whatsapp_abrir)) }
                 }
             },
@@ -169,8 +197,36 @@ internal fun ConfirmarPedidoScreen(viewModel: ConfirmarPedidoViewModel, onVolver
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CompartirPedidoWhatsApp(recibo: EnvioPedido.Guardado) {
+private fun SelectorMetodoPago(
+    seleccionado: MetodoPago?,
+    onSeleccionar: (MetodoPago) -> Unit,
+    mostrarError: Boolean
+) {
+    Text(stringResource(R.string.pedido_metodo_pago), style = MaterialTheme.typography.titleMedium)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        MetodoPago.entries.forEach { opcion ->
+            FilterChip(
+                selected = seleccionado == opcion,
+                onClick = { onSeleccionar(opcion) },
+                label = { Text(stringResource(opcion.etiqueta)) }
+            )
+        }
+    }
+    if (mostrarError) {
+        Text(stringResource(R.string.pedido_pago_requerido), color = MaterialTheme.colorScheme.error)
+    }
+}
+
+private fun MetodoPago.instruccion(entrega: Entrega): Int = when (this) {
+    MetodoPago.YAPE -> R.string.pedido_pago_yape_manual
+    MetodoPago.EFECTIVO -> if (entrega == Entrega.DELIVERY) R.string.pedido_pago_efectivo_delivery
+        else R.string.pedido_pago_efectivo_recojo
+}
+
+@Composable
+private fun CompartirPedidoWhatsApp(recibo: EnvioPedido.Guardado, onAbrirWhatsApp: () -> Unit) {
     val numero = stringResource(R.string.whatsapp_restaurante_numero)
     if (numero.isBlank()) return
 
@@ -201,7 +257,10 @@ private fun CompartirPedidoWhatsApp(recibo: EnvioPedido.Guardado) {
             confirmButton = {
                 TextButton(onClick = {
                     errorAlAbrir = !abrirWhatsApp(context, numero, mensaje)
-                    if (!errorAlAbrir) mostrar = false
+                    if (!errorAlAbrir) {
+                        mostrar = false
+                        onAbrirWhatsApp()
+                    }
                 }) { Text(stringResource(R.string.pedido_whatsapp_abrir)) }
             },
             dismissButton = {
