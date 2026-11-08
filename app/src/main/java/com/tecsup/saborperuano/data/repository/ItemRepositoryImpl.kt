@@ -36,13 +36,18 @@ class ItemRepositoryImpl(
             val recetas = api.listar()
             database.withTransaction {
                 val idsFavoritos = dao.idsFavoritos().toSet()
-                dao.guardarTodos(recetas.map { it.aEntity(esFavorito = it.id in idsFavoritos) })
+                val idsEditados = dao.idsEditadosLocalmente().toSet()
+                val actualizables = recetas.filterNot { it.id in idsEditados }
+                dao.guardarTodos(actualizables.map { it.aEntity(esFavorito = it.id in idsFavoritos) })
+                actualizables.size
             }
-            recetas.size
         }
     }
 
     override suspend fun obtenerDetalle(id: String): Result<Item> = ejecutarPeticion {
+        val local = dao.buscar(id)
+        if (local?.retiradoLocal == true) throw NoSuchElementException()
+        if (local?.editadoLocal == true) return@ejecutarPeticion local.aModelo()
         val detalle = api.obtenerDetalle(id).aModelo()
         detalle.copy(
             esFavorito = dao.esFavorito(id),
@@ -50,13 +55,16 @@ class ItemRepositoryImpl(
         ).conPrecioDePrueba()
     }
 
-    override suspend fun alternarFavorito(id: String) = dao.alternarFavorito(id)
+    override suspend fun alternarFavorito(id: String): Boolean = database.withTransaction {
+        dao.alternarFavorito(id)
+        dao.esFavorito(id)
+    }
 
     override suspend fun cantidadGuardada(): Int = dao.contar()
 
     override suspend fun cantidadFavoritos(): Int = dao.contarFavoritos()
 
-    override suspend fun limpiarCache() = cambiosCatalogo.withLock { dao.borrarTodo() }
+    override suspend fun limpiarCache() = cambiosCatalogo.withLock { dao.borrarCacheRemota() }
 
     private fun Item.conPrecioDePrueba(): Item =
         if (precioCentimos == null) copy(precioCentimos = preciosDePrueba[id]) else this
@@ -64,6 +72,8 @@ class ItemRepositoryImpl(
     private suspend fun <T> ejecutarPeticion(operacion: suspend () -> T): Result<T> = try {
         Result.success(operacion())
     } catch (error: IOException) {
+        Result.failure(error)
+    } catch (error: NoSuchElementException) {
         Result.failure(error)
     } catch (error: HttpException) {
         Result.failure(error)
