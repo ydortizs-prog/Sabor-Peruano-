@@ -1,5 +1,6 @@
 package com.tecsup.saborperuano.ui.lista
 
+import android.database.sqlite.SQLiteException
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
@@ -19,6 +20,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -84,6 +86,20 @@ class ListaViewModel(
                 }
             }
         }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.Cargando)
+
+    private val _errorFavorito = MutableStateFlow(false)
+    internal val errorFavorito = _errorFavorito.asStateFlow()
+
+    internal fun alternarFavorito(id: String, onFavoritoAgregado: () -> Unit) {
+        viewModelScope.launch {
+            _errorFavorito.value = false
+            try {
+                if (repositorio.alternarFavorito(id)) onFavoritoAgregado()
+            } catch (_: SQLiteException) {
+                _errorFavorito.value = true
+            }
+        }
+    }
 
     fun buscar(texto: String) {
         estadoGuardado["consulta"] = texto

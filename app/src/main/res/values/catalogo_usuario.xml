@@ -1,0 +1,34 @@
+<resources>
+    <string name="catalogo_inicio">Inicio</string>
+    <string name="catalogo_cuenta">Mi cuenta</string>
+    <string name="catalogo_correo_no_disponible">Correo no disponible</string>
+    <string name="catalogo_tema_claro">Tema claro</string>
+    <string name="catalogo_tema_oscuro">Tema oscuro</string>
+    <string name="catalogo_actividad">Notificaciones</string>
+    <string name="catalogo_sin_avisos">Aún no hay avisos guardados.</string>
+    <string name="catalogo_aviso_agregado">Agregaste %1$s al carrito.</string>
+    <string name="catalogo_aviso_whatsapp">Abriste el pedido en WhatsApp. Confirma el envío desde el chat.</string>
+    <string name="catalogo_aviso_favorito">Agregaste %1$s a tus favoritos.</string>
+    <string name="catalogo_aviso_pedido">Tu pedido se guardó correctamente.</string>
+    <string name="catalogo_cerrar">Cerrar</string>
+    <string name="catalogo_calificar">☆ Calificar</string>
+    <string name="catalogo_valoracion">★ %1$d/5</string>
+    <string name="catalogo_estrellas_opcion">Calificar con %1$d de 5 estrellas</string>
+    <string name="catalogo_calificar_titulo">Calificar %1$s</string>
+    <string name="catalogo_calificar_privado">Tu valoración se guarda en este dispositivo.</string>
+    <string name="catalogo_guardar_valoracion">Guardar valoración</string>
+    <string name="catalogo_buscar_usuario">Buscar platillos peruanos…</string>
+    <string name="catalogo_filtros">Filtrar por categoría</string>
+    <string name="catalogo_quitar_valoracion">Quitar valoración</string>
+    <string name="perfil_marca">SABOR PERUANO</string>
+    <string name="perfil_pestana">Perfil</string>
+    <string name="perfil_nombre_alternativo">Cliente</string>
+    <string name="perfil_actividad">MI ACTIVIDAD</string>
+    <string name="perfil_pedidos">Mis pedidos</string>
+    <string name="perfil_pedidos_subtitulo">Actividad guardada en este dispositivo</string>
+    <string name="perfil_sin_pedidos">Aún no hay actividad de pedidos guardada.</string>
+    <string name="perfil_preferencias">PREFERENCIAS</string>
+    <string name="perfil_modo_oscuro">Modo oscuro</string>
+    <string name="perfil_confirmar_salida">¿Quieres cerrar tu sesión?</string>
+    <string name="catalogo_error_favorito">No se pudo actualizar el favorito. Inténtalo de nuevo.</string>
+</resources>

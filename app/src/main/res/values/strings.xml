@@ -55,7 +55,11 @@
     <string name="admin_favoritos">Favoritos: %1$d</string>
     <string name="admin_sincronizar">Sincronizar catálogo</string>
     <string name="admin_limpiar">Limpiar caché</string>
-    <string name="admin_confirmar_limpieza">Se borrarán los platillos guardados y sus marcas de favorito en este dispositivo.</string>
+    <string name="admin_confirmar_limpieza">Se borrará la copia descargada del catálogo. Los cambios del menú de demostración se conservarán.</string>
     <string name="admin_cancelar">Cancelar</string>
     <string name="notificacion_canal">Sincronización del catálogo</string>
+    <string name="welcome_marca">SABOR\nPERUANO</string>
+    <string name="welcome_saludo">¡Qué gusto tenerte aquí!</string>
+    <string name="welcome_frase">Comida criolla hasta tu puerta</string>
+    <string name="welcome_moto_descripcion">Repartidor en moto con una caja roja</string>
 </resources>

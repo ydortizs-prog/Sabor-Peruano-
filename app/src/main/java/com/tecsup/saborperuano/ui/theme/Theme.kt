@@ -90,9 +90,9 @@ private val CatalogoOscuro = darkColorScheme(
 )
 
 @Composable
-fun TemaCatalogo(content: @Composable () -> Unit) {
+fun TemaCatalogo(oscuro: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = if (isSystemInDarkTheme()) CatalogoOscuro else CatalogoClaro,
+        colorScheme = if (oscuro) CatalogoOscuro else CatalogoClaro,
         typography = Typography,
         content = content
     )

@@ -36,7 +36,9 @@ fun DetalleScreen(
     viewModel: DetalleViewModel,
     onVolver: () -> Unit,
     onAbrirCarrito: () -> Unit,
-    modifier: Modifier = Modifier
+    onPlatoAgregado: (String) -> Unit = {},
+    modifier: Modifier = Modifier,
+    onFavoritoAgregado: (String) -> Unit = {}
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     val cantidad by viewModel.cantidad.collectAsStateWithLifecycle()
@@ -56,9 +58,14 @@ fun DetalleScreen(
                     cantidad = cantidad,
                     errorFavorito = errorFavorito,
                     onCambiarCantidad = viewModel::cambiarCantidad,
-                    onAlternarFavorito = viewModel::alternarFavorito,
+                    onAlternarFavorito = {
+                        viewModel.alternarFavorito { onFavoritoAgregado(actual.datos.titulo) }
+                    },
                     onAgregarAlCarrito = {
-                        if (viewModel.agregarAlCarrito()) onAbrirCarrito()
+                        if (viewModel.agregarAlCarrito()) {
+                            onPlatoAgregado(actual.datos.titulo)
+                            onAbrirCarrito()
+                        }
                     },
                     onAbrirCarrito = onAbrirCarrito
                 )

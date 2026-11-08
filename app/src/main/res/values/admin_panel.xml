@@ -1,0 +1,32 @@
+<resources>
+    <string name="admin_inicio">Panel</string>
+    <string name="admin_menu">Menú</string>
+    <string name="admin_pedidos">Pedidos</string>
+    <string name="admin_indicador_catalogo">Platillos guardados</string>
+    <string name="admin_indicador_favoritos">Favoritos locales</string>
+    <string name="admin_catalogo_local">Catálogo guardado</string>
+    <string name="admin_catalogo_vacio">Sin platillos guardados. Sincroniza el catálogo para cargar el menú.</string>
+    <string name="admin_ver_menu">Ver menú</string>
+    <string name="admin_ver_catalogo">Abrir catálogo</string>
+    <string name="admin_gestion_local">Gestión del catálogo</string>
+    <string name="admin_pedidos_por_chat">Los pedidos se coordinan por WhatsApp. Consulta el chat del restaurante para revisar los mensajes recibidos.</string>
+    <string name="admin_perfil_pedidos">Pedidos del restaurante</string>
+    <string name="admin_perfil_pedidos_subtitulo">Ver cómo se reciben los pedidos</string>
+    <string name="admin_perfil_nombre">Administrador</string>
+    <string name="admin_aviso_sincronizado">Se sincronizó el catálogo.</string>
+    <string name="admin_aviso_cache">Se limpió el catálogo local.</string>
+    <string name="admin_avisos_vacio">Los avisos de administración aparecerán aquí.</string>
+    <string name="admin_menu_local">Demo local. Los cambios se aplican al catálogo de este dispositivo.</string>
+    <string name="admin_nuevo_plato">Nuevo plato</string>
+    <string name="admin_editar_plato">Editar plato</string>
+    <string name="admin_guardar_plato">Guardar plato</string>
+    <string name="admin_retirar_plato">Retirar plato</string>
+    <string name="admin_confirmar_retiro">¿Retirar «%1$s» del catálogo de este dispositivo?</string>
+    <string name="admin_nombre_plato">Nombre</string>
+    <string name="admin_descripcion_plato">Descripción</string>
+    <string name="admin_precio_plato">Precio en soles</string>
+    <string name="admin_guardando_menu">Guardando cambios…</string>
+    <string name="admin_aviso_plato_guardado">Se guardó un plato en el menú local.</string>
+    <string name="admin_aviso_plato_retirado">Se retiró un plato del menú local.</string>
+    <string name="admin_editar_plato_acceso">Editar %1$s</string>
+</resources>
