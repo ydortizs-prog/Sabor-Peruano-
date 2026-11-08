@@ -3,6 +3,7 @@ package com.tecsup.saborperuano.data.repository
 import com.tecsup.saborperuano.domain.model.Item
 import com.tecsup.saborperuano.domain.model.LineaCarrito
 import com.tecsup.saborperuano.domain.model.MAX_UNIDADES_POR_PLATO
+import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +32,19 @@ class CarritoRepository {
         _lineas.update { actuales ->
             actuales.map { if (it.id == id) it.copy(cantidad = cantidad) else it }
         }
+    }
+
+    private var ultimaSolicitud: SolicitudPedido? = null
+
+    internal fun prepararSolicitud(datos: SolicitudPedido): SolicitudPedido {
+        val anterior = ultimaSolicitud
+        if (anterior?.copy(intento = "") == datos) return checkNotNull(anterior)
+        return datos.copy(intento = UUID.randomUUID().toString()).also { ultimaSolicitud = it }
+    }
+
+    fun vaciar() {
+        ultimaSolicitud = null
+        _lineas.value = emptyList()
     }
 
     fun quitar(id: String) {

@@ -9,6 +9,7 @@ import com.tecsup.saborperuano.data.remote.RetrofitClient
 import com.tecsup.saborperuano.data.repository.CarritoRepository
 import com.tecsup.saborperuano.data.repository.ItemRepository
 import com.tecsup.saborperuano.data.repository.ItemRepositoryImpl
+import com.tecsup.saborperuano.data.repository.PedidoRepository
 import com.tecsup.saborperuano.notification.Notificador
 import com.tecsup.saborperuano.notification.NotificadorAndroid
 import kotlinx.serialization.json.Json
@@ -36,6 +37,9 @@ class AppContainer private constructor(context: Context) {
 
     val authRepository: AuthRepository by lazy { FirebaseAuthRepository() }
 
+    internal val pedidoRepository = PedidoRepository(
+        context.resources.getBoolean(R.bool.pedido_backend_habilitado)
+    )
     val notificador: Notificador = NotificadorAndroid(context)
 
     companion object {

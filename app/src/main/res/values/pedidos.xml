@@ -1,0 +1,14 @@
+<resources>
+    <bool name="pedido_backend_habilitado">false</bool>
+    <string name="pedido_guardar">Guardar pedido</string>
+    <string name="pedido_guardando">Guardando pedido…</string>
+    <string name="pedido_guardado">Pedido guardado</string>
+    <string name="pedido_numero">Número de pedido: %1$s</string>
+    <string name="pedido_error_guardar">No se pudo guardar el pedido. Reintenta desde este resumen.</string>
+    <string name="pedido_error_cotizacion">Cambió el precio o la disponibilidad de un plato. Revisa el catálogo.</string>
+    <string name="whatsapp_restaurante_numero" translatable="false"></string>
+    <string name="pedido_whatsapp_revisar">Revisar para WhatsApp</string>
+    <string name="pedido_whatsapp_abrir">Abrir WhatsApp</string>
+    <string name="pedido_whatsapp_error">No se pudo abrir WhatsApp ni un navegador.</string>
+    <string name="pedido_whatsapp_directo">Confirma el envío desde WhatsApp. El restaurante te responderá por el chat.</string>
+</resources>

@@ -28,6 +28,8 @@ import com.tecsup.saborperuano.domain.model.Rol
 import com.tecsup.saborperuano.domain.model.Sesion
 import com.tecsup.saborperuano.ui.carrito.CarritoScreen
 import com.tecsup.saborperuano.ui.carrito.CarritoViewModel
+import com.tecsup.saborperuano.ui.carrito.ConfirmarPedidoScreen
+import com.tecsup.saborperuano.ui.carrito.ConfirmarPedidoViewModel
 import com.tecsup.saborperuano.ui.admin.AdminScreen
 import com.tecsup.saborperuano.ui.admin.AdminViewModel
 import com.tecsup.saborperuano.ui.detalle.DetalleScreen
@@ -50,6 +52,9 @@ private data object DestinoFavoritos
 
 @Serializable
 private data object DestinoCarrito
+
+@Serializable
+private data object DestinoConfirmarPedido
 
 @Serializable
 private data object DestinoAdmin
@@ -124,6 +129,18 @@ private fun CatalogoNav(
         composable<DestinoCarrito> {
             CarritoScreen(
                 viewModel = viewModel(factory = CarritoViewModel.Factory(repositorioCarrito)),
+                onVolver = { navController.navigateUp() },
+                onRevisarPedido = {
+                    navController.navigate(DestinoConfirmarPedido) { launchSingleTop = true }
+                }
+            )
+        }
+
+        composable<DestinoConfirmarPedido> {
+            ConfirmarPedidoScreen(
+                viewModel = viewModel(factory = ConfirmarPedidoViewModel.Factory(
+                    repositorioCarrito, appContainer.pedidoRepository, sesion.uid
+                )),
                 onVolver = { navController.navigateUp() }
             )
         }

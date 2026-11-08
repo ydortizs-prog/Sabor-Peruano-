@@ -16,3 +16,4 @@ local.properties
 /app/google-services.json
 /.idea/
 build/
+/app/src/debug/res/values/whatsapp.xml
