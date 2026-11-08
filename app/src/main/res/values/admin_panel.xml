@@ -29,4 +29,7 @@
     <string name="admin_aviso_plato_guardado">Se guardó un plato en el menú local.</string>
     <string name="admin_aviso_plato_retirado">Se retiró un plato del menú local.</string>
     <string name="admin_editar_plato_acceso">Editar %1$s</string>
+    <string name="admin_seleccionar_foto">Seleccionar foto</string>
+    <string name="admin_cambiar_foto">Cambiar foto</string>
+    <string name="admin_error_foto">No se pudo conservar esta foto. Elige otra imagen.</string>
 </resources>

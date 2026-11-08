@@ -10,7 +10,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Serializable
-internal enum class TipoAvisoCliente { FAVORITO, CARRITO, WHATSAPP, PEDIDO_GUARDADO }
+internal enum class TipoAvisoCliente { FAVORITO, CARRITO, WHATSAPP, PEDIDO_GUARDADO, PEDIDO_WHATSAPP }
 
 @Serializable
 internal data class AvisoGuardado(val tipo: TipoAvisoCliente, val plato: String? = null)

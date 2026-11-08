@@ -10,7 +10,8 @@ internal const val MaxPrecioLocalCentimos = 1_000_000
 internal data class DatosPlatilloLocal(
     val nombre: String,
     val descripcion: String,
-    val precioCentimos: Int
+    val precioCentimos: Int,
+    val fotoLocal: String? = null
 )
 
 internal class MenuLocalRepository(private val database: AppDatabase) {
@@ -33,6 +34,7 @@ internal class MenuLocalRepository(private val database: AppDatabase) {
             titulo = datos.nombre,
             subtitulo = datos.descripcion,
             precioCentimos = datos.precioCentimos,
+            imagenUrl = datos.fotoLocal ?: plato.imagenUrl,
             editadoLocal = true
         )))
     }

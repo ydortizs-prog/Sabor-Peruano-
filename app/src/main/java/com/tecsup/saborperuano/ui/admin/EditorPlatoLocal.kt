@@ -1,13 +1,19 @@
 package com.tecsup.saborperuano.ui.admin
 
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -17,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -24,6 +31,8 @@ import com.tecsup.saborperuano.R
 import com.tecsup.saborperuano.data.repository.DatosPlatilloLocal
 import com.tecsup.saborperuano.data.repository.MaxPrecioLocalCentimos
 import com.tecsup.saborperuano.domain.model.Item
+import com.tecsup.saborperuano.ui.components.FotoReceta
+import com.tecsup.saborperuano.ui.components.PrefijoFotoLocal
 import java.math.BigDecimal
 
 private val formatoPrecio = Regex("[0-9]{1,5}([.,][0-9]{1,2})?")
@@ -40,6 +49,20 @@ internal fun EditorPlatoLocal(
     var descripcion by rememberSaveable(plato?.id) { mutableStateOf(plato?.subtitulo.orEmpty()) }
     var precio by rememberSaveable(plato?.id) {
         mutableStateOf(plato?.precioCentimos?.let { BigDecimal.valueOf(it.toLong(), 2).toPlainString() }.orEmpty())
+    }
+    var fotoLocal by rememberSaveable(plato?.id) { mutableStateOf<String?>(null) }
+    var errorFoto by rememberSaveable { mutableStateOf(false) }
+    val contexto = LocalContext.current
+    val seleccionarFoto = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+        if (uri != null) {
+            try {
+                contexto.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                fotoLocal = PrefijoFotoLocal + uri.toString()
+                errorFoto = false
+            } catch (_: SecurityException) {
+                errorFoto = true
+            }
+        }
     }
     var confirmarRetiro by rememberSaveable { mutableStateOf(false) }
     val precioLimpio = precio.trim()
@@ -106,6 +129,16 @@ internal fun EditorPlatoLocal(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     isError = precio.isNotBlank() && centimos == null
                 )
+                val foto = fotoLocal ?: plato?.imagenUrl?.takeIf { it.startsWith(PrefijoFotoLocal) }
+                if (foto != null) {
+                    FotoReceta(Item(plato?.id.orEmpty(), nombre, imagenUrl = foto), Modifier.fillMaxWidth().height(96.dp))
+                }
+                OutlinedButton(
+                    onClick = { seleccionarFoto.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = activo
+                ) { Text(stringResource(if (foto == null) R.string.admin_seleccionar_foto else R.string.admin_cambiar_foto)) }
+                if (errorFoto) Text(stringResource(R.string.admin_error_foto), color = MaterialTheme.colorScheme.error)
                 MensajeEdicion(edicion)
                 if (plato != null) {
                     TextButton(onClick = { confirmarRetiro = true }, enabled = activo) {
@@ -118,7 +151,7 @@ internal fun EditorPlatoLocal(
             TextButton(
                 onClick = {
                     if (centimos != null) {
-                        onGuardar(DatosPlatilloLocal(nombre.trim(), descripcion.trim(), centimos))
+                        onGuardar(DatosPlatilloLocal(nombre.trim(), descripcion.trim(), centimos, fotoLocal))
                     }
                 },
                 enabled = activo && nombre.isNotBlank() && centimos != null

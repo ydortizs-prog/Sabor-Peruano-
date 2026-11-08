@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.tecsup.saborperuano.R
+import com.tecsup.saborperuano.data.local.PreferenciasCliente
+import com.tecsup.saborperuano.data.local.TipoAvisoCliente
 import com.tecsup.saborperuano.data.repository.CarritoRepository
 import com.tecsup.saborperuano.data.repository.LineaSolicitud
 import com.tecsup.saborperuano.data.repository.PedidoGuardado
 import com.tecsup.saborperuano.data.repository.PedidoRepository
 import com.tecsup.saborperuano.data.repository.SolicitudPedido
 import com.tecsup.saborperuano.domain.model.LineaCarrito
+import com.tecsup.saborperuano.ui.components.soles
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -51,13 +54,15 @@ internal sealed interface EnvioPedido {
         val solicitud: SolicitudPedido,
         val lineas: List<LineaCarrito>
     ) : EnvioPedido
+    data class GuardadoLocal(val resumen: ResumenCarrito, val entrega: Entrega) : EnvioPedido
     data class Error(val mensaje: Int, val reintentar: Boolean) : EnvioPedido
 }
 
 internal class ConfirmarPedidoViewModel(
     private val carrito: CarritoRepository,
     private val pedidos: PedidoRepository,
-    private val uid: String
+    private val uid: String,
+    private val preferencias: PreferenciasCliente
 ) : ViewModel() {
     val envioHabilitado = pedidos.habilitado
     private val _envio = MutableStateFlow<EnvioPedido>(EnvioPedido.SinEnviar)
@@ -75,9 +80,27 @@ internal class ConfirmarPedidoViewModel(
     fun observaciones(valor: String) = _datos.update { it.copy(observaciones = valor) }
     fun metodoPago(valor: MetodoPago) = _datos.update { it.copy(metodoPago = valor) }
 
+    fun confirmarEnvioWhatsApp() {
+        if (_envio.value != EnvioPedido.SinEnviar) return
+        val contacto = datos.value
+        val seleccion = ResumenCarrito(carrito.lineas.value)
+        val metodo = contacto.metodoPago ?: return
+        if (!contacto.valido || seleccion.lineas.isEmpty()) return
+
+        val platos = seleccion.lineas.joinToString(", ") { "${it.cantidad} × ${it.nombre}" }
+        val importe = soles(seleccion.totalCentimos)
+        preferencias.agregarAviso(
+            TipoAvisoCliente.PEDIDO_WHATSAPP,
+            "$platos · Subtotal de platos: $importe · ${metodo.nombre}"
+        )
+        _envio.value = EnvioPedido.GuardadoLocal(seleccion, contacto.entrega)
+        carrito.vaciar()
+    }
+
     fun guardar() {
         val estado = _envio.value
         if (!envioHabilitado || estado is EnvioPedido.Guardando || estado is EnvioPedido.Guardado ||
+            estado is EnvioPedido.GuardadoLocal ||
             (estado is EnvioPedido.Error && !estado.reintentar)
         ) return
 
@@ -118,12 +141,13 @@ internal class ConfirmarPedidoViewModel(
     class Factory(
         private val carrito: CarritoRepository,
         private val pedidos: PedidoRepository,
-        private val uid: String
+        private val uid: String,
+        private val preferencias: PreferenciasCliente
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             require(modelClass == ConfirmarPedidoViewModel::class.java)
             @Suppress("UNCHECKED_CAST")
-            return ConfirmarPedidoViewModel(carrito, pedidos, uid) as T
+            return ConfirmarPedidoViewModel(carrito, pedidos, uid, preferencias) as T
         }
     }
 }

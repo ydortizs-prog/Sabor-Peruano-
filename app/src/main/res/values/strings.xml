@@ -12,7 +12,7 @@
     <string name="carrito_vacio">Agrega un platillo del menú para empezar tu pedido.</string>
     <string name="carrito_quitar">Quitar del carrito</string>
     <string name="carrito_total">Total: %1$s</string>
-    <string name="carrito_revisar">Revisar pedido</string>
+    <string name="carrito_revisar">Continuar pedido</string>
     <string name="pedido_resumen">Resumen del pedido</string>
     <string name="pedido_linea">%1$d × %2$s · %3$s</string>
     <string name="pedido_envio_pendiente">El envío de pedidos aún no está disponible.</string>

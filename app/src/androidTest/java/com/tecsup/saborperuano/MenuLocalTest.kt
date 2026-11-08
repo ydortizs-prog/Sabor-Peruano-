@@ -31,7 +31,8 @@ class MenuLocalTest {
             catalogo.refrescar().getOrThrow()
             assertTrue(catalogo.alternarFavorito(original.id))
 
-            menu.guardar(original.id, DatosPlatilloLocal("Ají de la casa", "Edición local", 1950))
+            val foto = "foto-local:content://prueba/plato"
+            menu.guardar(original.id, DatosPlatilloLocal("Ají de la casa", "Edición local", 1950, foto))
             menu.guardar(null, DatosPlatilloLocal("Nuevo plato", "Solo en este dispositivo", 1350))
             catalogo.limpiarCache()
             catalogo.refrescar().getOrThrow()
@@ -39,7 +40,9 @@ class MenuLocalTest {
             val platos = catalogo.items.first()
             val nuevo = platos.single { it.titulo == "Nuevo plato" }
             assertEquals(1350, catalogo.obtenerDetalle(nuevo.id).getOrThrow().precioCentimos)
-            assertEquals(1950, catalogo.obtenerDetalle(original.id).getOrThrow().precioCentimos)
+            val editado = catalogo.obtenerDetalle(original.id).getOrThrow()
+            assertEquals(1950, editado.precioCentimos)
+            assertEquals(foto, editado.imagenUrl)
             assertEquals("Ají de la casa", catalogo.favoritos.first().single().titulo)
 
             menu.retirar(original.id)

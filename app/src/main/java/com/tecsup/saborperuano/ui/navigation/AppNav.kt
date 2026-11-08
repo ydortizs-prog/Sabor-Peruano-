@@ -177,7 +177,8 @@ private fun CatalogoNav(
                     temaOscuro = temaOscuro,
                     onCambiarTema = preferencias::cambiarTema,
                     pedidos = actividad.value.avisos.filter {
-                        it.tipo == TipoAvisoCliente.WHATSAPP || it.tipo == TipoAvisoCliente.PEDIDO_GUARDADO
+                        it.tipo == TipoAvisoCliente.WHATSAPP || it.tipo == TipoAvisoCliente.PEDIDO_GUARDADO ||
+                            it.tipo == TipoAvisoCliente.PEDIDO_WHATSAPP
                     }.map(AvisoGuardado::aAvisoVisible),
                     onCerrarSesion = onCerrarSesion
                 ) {
@@ -234,7 +235,7 @@ private fun CatalogoNav(
         composable<DestinoConfirmarPedido> {
             ConfirmarPedidoScreen(
                 viewModel = viewModel(factory = ConfirmarPedidoViewModel.Factory(
-                    repositorioCarrito, appContainer.pedidoRepository, sesion.uid
+                    repositorioCarrito, appContainer.pedidoRepository, sesion.uid, preferencias
                 )),
                 onVolver = { navController.navigateUp() },
                 onAbrirWhatsApp = {
@@ -273,6 +274,7 @@ private fun AvisoGuardado.aAvisoVisible(): AvisoCliente {
         TipoAvisoCliente.CARRITO -> R.string.catalogo_aviso_agregado
         TipoAvisoCliente.WHATSAPP -> R.string.catalogo_aviso_whatsapp
         TipoAvisoCliente.PEDIDO_GUARDADO -> R.string.catalogo_aviso_pedido
+        TipoAvisoCliente.PEDIDO_WHATSAPP -> R.string.pedido_aviso_whatsapp_guardado
     }
     return AvisoCliente(mensaje, plato)
 }

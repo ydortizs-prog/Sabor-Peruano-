@@ -217,3 +217,21 @@ Sabor Peruano, rama `mejora-ia`. Las entradas registran las consultas de impleme
 - **Qué respondió** Se cotejaron la guía, la rama y las verificaciones disponibles.
 - **Qué se usó o cambió** Se agregaron tres pruebas de ListaViewModel con repositorio falso y se separó el rediseño de los demás cambios en Git.
 - **Qué se aprendió** Las pruebas de un ViewModel permiten verificar carga, caché y reintento sin depender de servicios externos.
+
+## Consulta 25
+
+- **Fecha** 8 de noviembre de 2026.
+- **Herramienta** Codex.
+- **Prompt** «esa logica de revisar pedido no la entiendo [...] mejora esa logica de acrrito».
+- **Qué respondió** Se reorganizó el checkout en carrito, entrega y pago, y confirmación.
+- **Qué se usó o cambió** Se reemplazó el cuadro de revisión por una pantalla completa. Se distinguió el precio por unidad, el subtotal y la tarifa pendiente de delivery.
+- **Qué se aprendió** Indicar el paso y la acción siguiente ayuda a entender qué falta antes de enviar.
+
+## Consulta 26
+
+- **Fecha** 8 de noviembre de 2026.
+- **Herramienta** Codex.
+- **Prompt** «cuando se envie el mensaje a washap [...] se ponga guardado [...] en agregar plato en administrado pon la opcion de subir foto».
+- **Qué respondió** Se añadió una confirmación manual al volver de WhatsApp y un selector de fotos para el menú local.
+- **Qué se usó o cambió** «Ya envié el pedido» guarda su resumen en el dispositivo y vacía el carrito. El editor permite elegir una imagen de la galería y conservar su acceso al reabrir la app.
+- **Qué se aprendió** Abrir un chat con texto preparado no permite detectar el envío. El selector de Android permite acceder solo a la foto elegida.

@@ -1,19 +1,29 @@
 package com.tecsup.saborperuano.ui.components
 
+import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tecsup.saborperuano.R
 import com.tecsup.saborperuano.domain.model.Item
+import java.io.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 internal fun TarjetasRecetas(
@@ -115,8 +125,44 @@ internal fun TarjetaPlato(
     }
 }
 
+internal const val PrefijoFotoLocal = "foto-local:"
+
 @Composable
 internal fun FotoReceta(receta: Item, modifier: Modifier = Modifier) {
+    val referencia = receta.imagenUrl?.takeIf { it.startsWith(PrefijoFotoLocal) }
+    val contexto = LocalContext.current
+    val foto by produceState<ImageBitmap?>(null, referencia) {
+        value = null
+        if (referencia == null) return@produceState
+        val uri = Uri.parse(referencia.removePrefix(PrefijoFotoLocal))
+        if (uri.scheme != "content") return@produceState
+        value = withContext(Dispatchers.IO) {
+            try {
+                val resolver = contexto.contentResolver
+                if (resolver.persistedUriPermissions.none { it.uri == uri && it.isReadPermission }) {
+                    return@withContext null
+                }
+                val limites = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, limites) }
+                if (limites.outWidth <= 0 || limites.outHeight <= 0) return@withContext null
+                var muestra = 1
+                val lado = maxOf(limites.outWidth, limites.outHeight)
+                while (lado / muestra > 1600) muestra *= 2
+                val opciones = BitmapFactory.Options().apply { inSampleSize = muestra }
+                resolver.openInputStream(uri)?.use {
+                    BitmapFactory.decodeStream(it, null, opciones)?.asImageBitmap()
+                }
+            } catch (_: IOException) {
+                null
+            } catch (_: SecurityException) {
+                null
+            }
+        }
+    }
+    foto?.let {
+        Image(it, contentDescription = null, modifier = modifier, contentScale = ContentScale.Crop)
+        return
+    }
     val recurso = when (receta.id) {
         "aji-de-gallina" -> R.drawable.platillo_aji
         "lomo-saltado" -> R.drawable.platillo_lomo
