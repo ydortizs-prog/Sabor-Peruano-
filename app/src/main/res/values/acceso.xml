@@ -1,0 +1,22 @@
+<resources>
+    <string name="login_bienvenida">¡Bienvenido de nuevo!</string>
+    <string name="login_correo_pista">Introduce tu correo…</string>
+    <string name="login_clave_pista">Introduce tu contraseña…</string>
+    <string name="login_mostrar_clave">Mostrar contraseña</string>
+    <string name="login_ocultar_clave">Ocultar contraseña</string>
+    <string name="login_olvidaste_clave">¿Olvidaste tu contraseña?</string>
+    <string name="login_recuperar_titulo">Restablecer contraseña</string>
+    <string name="login_recuperar_indicacion">Escribe el correo que usas para iniciar sesión.</string>
+    <string name="login_recuperar_correo_invalido">Escribe un correo electrónico válido.</string>
+    <string name="login_recuperar_enviar">Enviar enlace</string>
+    <string name="login_recuperar_enviando">Solicitando enlace…</string>
+    <string name="login_recuperar_solicitado">Si hay una cuenta asociada a ese correo, recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de correo no deseado.</string>
+    <string name="login_recuperar_sin_conexion">Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="login_recuperar_error">No pudimos solicitar el enlace. Inténtalo de nuevo más tarde.</string>
+    <string name="login_recuperar_listo">Entendido</string>
+    <string name="login_registrate">Regístrate</string>
+    <string name="registro_titulo">Crear cuenta</string>
+    <string name="registro_nombre">Nombre</string>
+    <string name="registro_confirmar_clave">Confirmar contraseña</string>
+    <string name="registro_enviando">Creando tu cuenta…</string>
+</resources>

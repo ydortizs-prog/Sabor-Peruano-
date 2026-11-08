@@ -1,6 +1,7 @@
 package com.tecsup.saborperuano.data.auth
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
@@ -31,6 +32,38 @@ class FirebaseAuthRepository(
         }
     }
 
+    override suspend fun registrar(nombre: String, correo: String, clave: String): Sesion {
+        val usuario = try {
+            checkNotNull(auth.createUserWithEmailAndPassword(correo, clave).await().user)
+        } catch (error: FirebaseAuthUserCollisionException) {
+            // Permite completar un registro interrumpido tras crear la cuenta en Auth.
+            checkNotNull(auth.signInWithEmailAndPassword(correo, clave).await().user)
+        }
+
+        var registrado = false
+        try {
+            val perfil = firestore.collection("usuarios").document(usuario.uid)
+            val creado = firestore.runTransaction { transaccion ->
+                if (transaccion.get(perfil).exists()) {
+                    false
+                } else {
+                    transaccion.set(perfil, mapOf("nombre" to nombre, "rol" to "usuario"))
+                    true
+                }
+            }.await()
+            if (!creado) throw CuentaYaRegistradaException()
+
+            registrado = true
+            return Sesion(usuario.uid, usuario.email.orEmpty(), Rol.USUARIO, nombre)
+        } finally {
+            if (!registrado && auth.currentUser?.uid == usuario.uid) auth.signOut()
+        }
+    }
+
+    override suspend fun enviarRestablecimiento(correo: String) {
+        auth.sendPasswordResetEmail(correo).await()
+    }
+
     override suspend fun sesionActual(): Sesion? = auth.currentUser?.let { leerSesion(it) }
 
     override suspend fun confirmarAdministrador(uid: String): Boolean {
@@ -48,8 +81,11 @@ class FirebaseAuthRepository(
             "usuario" -> Rol.USUARIO
             else -> throw PerfilSinRolException()
         }
-        return Sesion(usuario.uid, usuario.email.orEmpty(), rol)
+        val nombre = (documento.get("nombre") as? String)?.trim()?.takeIf { it.isNotEmpty() }
+            ?: usuario.displayName?.trim()?.takeIf { it.isNotEmpty() }
+        return Sesion(usuario.uid, usuario.email.orEmpty(), rol, nombre)
     }
 }
 
 class PerfilSinRolException : IllegalStateException()
+internal class CuentaYaRegistradaException : IllegalStateException()
