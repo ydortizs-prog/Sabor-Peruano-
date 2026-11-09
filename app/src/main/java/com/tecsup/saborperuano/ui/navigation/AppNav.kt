@@ -14,7 +14,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -32,7 +31,6 @@ import androidx.navigation.toRoute
 import com.tecsup.saborperuano.AppContainer
 import com.tecsup.saborperuano.R
 import com.tecsup.saborperuano.data.local.AvisoGuardado
-import com.tecsup.saborperuano.data.local.PreferenciasCliente
 import com.tecsup.saborperuano.data.local.TipoAvisoCliente
 import com.tecsup.saborperuano.ui.lista.AvisoCliente
 import com.tecsup.saborperuano.ui.lista.BarraUsuario
@@ -101,14 +99,28 @@ fun AppNav(appContainer: AppContainer, modifier: Modifier = Modifier) {
         LoginScreen(login, modifier)
     } else if (PermisoNotificacionesResuelto()) {
         key(sesion.uid) {
-            val preferencias = remember { appContainer.preferenciasCliente(sesion.uid) }
+            val estadoSesion: SesionNavegacionViewModel = viewModel(
+                key = "sesion-navegacion-${sesion.uid}",
+                factory = SesionNavegacionViewModel.Factory(appContainer, sesion.uid)
+            )
+            val preferencias = estadoSesion.preferencias
             val tema = preferencias.temaOscuro.collectAsStateWithLifecycle().value ?: isSystemInDarkTheme()
             TemaCatalogo(oscuro = tema) {
                 Surface(
                     modifier = modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    CatalogoNav(appContainer, sesion, login::cerrarSesion, Modifier.fillMaxSize(), preferencias, tema)
+                    CatalogoNav(
+                        appContainer = appContainer,
+                        sesion = sesion,
+                        onCerrarSesion = {
+                            estadoSesion.limpiarSesion()
+                            login.cerrarSesion()
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                        estadoSesion = estadoSesion,
+                        temaOscuro = tema
+                    )
                 }
             }
         }
@@ -121,11 +133,12 @@ private fun CatalogoNav(
     sesion: Sesion,
     onCerrarSesion: () -> Unit,
     modifier: Modifier,
-    preferencias: PreferenciasCliente,
+    estadoSesion: SesionNavegacionViewModel,
     temaOscuro: Boolean
 ) {
     val navController = rememberNavController()
-    val repositorioCarrito = remember { appContainer.crearCarritoDeSesion() }
+    val repositorioCarrito = estadoSesion.carrito
+    val preferencias = estadoSesion.preferencias
     val lineas by repositorioCarrito.lineas.collectAsStateWithLifecycle()
     val abrirCarrito: () -> Unit = {
         navController.navigate(DestinoCarrito) { launchSingleTop = true }
@@ -135,7 +148,6 @@ private fun CatalogoNav(
     val valoraciones = if (esCliente) preferencias.valoraciones.collectAsStateWithLifecycle().value
         else emptyMap()
     val actividad = preferencias.actividad.collectAsStateWithLifecycle()
-    var ultimoPedido by remember { mutableStateOf<String?>(null) }
     val avisarFavorito: (String) -> Unit = { nombre ->
         if (esCliente) preferencias.agregarAviso(TipoAvisoCliente.FAVORITO, nombre)
     }
@@ -242,9 +254,8 @@ private fun CatalogoNav(
                     if (esCliente) preferencias.agregarAviso(TipoAvisoCliente.WHATSAPP)
                 },
                 onPedidoGuardado = { id ->
-                    if (ultimoPedido != id) {
-                        ultimoPedido = id
-                        if (esCliente) preferencias.agregarAviso(TipoAvisoCliente.PEDIDO_GUARDADO)
+                    if (esCliente && estadoSesion.registrarPedido(id)) {
+                        preferencias.agregarAviso(TipoAvisoCliente.PEDIDO_GUARDADO)
                     }
                 }
             )
