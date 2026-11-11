@@ -22,6 +22,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,13 +59,18 @@ import java.util.Locale
  * Ventana propia de notificaciones del cliente.
  * Muestra cada aviso como una tarjeta con icono de color, título, descripción y hace cuánto pasó.
  * Los primeros [nuevos] avisos (los que no estaban leídos al abrir) se resaltan.
+ * Cada aviso se puede borrar deslizándolo o con la papelera; también hay "Borrar todo".
  */
 @Composable
 internal fun PanelNotificaciones(
     avisos: List<AvisoCliente>,
     nuevos: Int,
+    onBorrar: (Int) -> Unit,
+    onBorrarTodo: () -> Unit,
     onCerrar: () -> Unit
 ) {
+    var confirmarBorrado by rememberSaveable { mutableStateOf(false) }
+
     Dialog(
         onDismissRequest = onCerrar,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -80,12 +98,20 @@ internal fun PanelNotificaciones(
                         color = MaterialTheme.colorScheme.primary,
                         textAlign = TextAlign.Center
                     )
+                    val nuevosVisibles = avisos.count { it.indice in 0 until nuevos }
                     Text(
-                        if (nuevos > 0) stringResource(R.string.notif_resumen_nuevas, nuevos)
+                        if (nuevosVisibles > 0) stringResource(R.string.notif_resumen_nuevas, nuevosVisibles)
                         else stringResource(R.string.notif_resumen_al_dia),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (avisos.isNotEmpty()) {
+                        Text(
+                            stringResource(R.string.notif_deslizar),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
                 }
 
                 if (avisos.isEmpty()) {
@@ -95,26 +121,100 @@ internal fun PanelNotificaciones(
                         modifier = Modifier.heightIn(max = 420.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        itemsIndexed(avisos) { indice, aviso ->
-                            TarjetaNotificacion(aviso, nueva = indice < nuevos)
+                        itemsIndexed(
+                            avisos,
+                            key = { posicion, aviso -> if (aviso.indice >= 0) aviso.indice else -(posicion + 1) }
+                        ) { _, aviso ->
+                            NotificacionDeslizable(
+                                aviso = aviso,
+                                nueva = aviso.indice in 0 until nuevos,
+                                onBorrar = { onBorrar(aviso.indice) }
+                            )
                         }
                     }
                 }
 
-                Button(
-                    onClick = onCerrar,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    shape = RoundedCornerShape(14.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.notif_cerrar), style = MaterialTheme.typography.titleMedium)
+                    if (avisos.isNotEmpty()) {
+                        OutlinedButton(
+                            onClick = { confirmarBorrado = true },
+                            modifier = Modifier.heightIn(min = 48.dp),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Text(stringResource(R.string.notif_borrar_todo))
+                        }
+                    }
+                    Button(
+                        onClick = onCerrar,
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text(
+                            stringResource(R.string.notif_cerrar),
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         }
     }
+
+    if (confirmarBorrado) {
+        AlertDialog(
+            onDismissRequest = { confirmarBorrado = false },
+            title = { Text(stringResource(R.string.notif_borrar_todo_titulo)) },
+            text = { Text(stringResource(R.string.notif_borrar_todo_texto)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmarBorrado = false
+                    onBorrarTodo()
+                }) { Text(stringResource(R.string.notif_borrar_todo)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmarBorrado = false }) {
+                    Text(stringResource(R.string.admin_cancelar))
+                }
+            }
+        )
+    }
 }
 
 @Composable
-private fun TarjetaNotificacion(aviso: AvisoCliente, nueva: Boolean) {
+private fun NotificacionDeslizable(aviso: AvisoCliente, nueva: Boolean, onBorrar: () -> Unit) {
+    val estado = rememberSwipeToDismissBoxState()
+    LaunchedEffect(estado.currentValue) {
+        if (estado.currentValue != SwipeToDismissBoxValue.Settled) onBorrar()
+    }
+    SwipeToDismissBox(
+        state = estado,
+        backgroundContent = {
+            val desdeInicio = estado.dismissDirection == SwipeToDismissBoxValue.StartToEnd
+            Box(
+                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = if (desdeInicio) Alignment.CenterStart else Alignment.CenterEnd
+            ) {
+                Icon(
+                    painterResource(R.drawable.ic_notif_borrar),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+        }
+    ) {
+        TarjetaNotificacion(aviso, nueva, onBorrar)
+    }
+}
+
+@Composable
+private fun TarjetaNotificacion(aviso: AvisoCliente, nueva: Boolean, onBorrar: () -> Unit) {
     val estilo = estiloDe(aviso.tipo)
     val esquema = MaterialTheme.colorScheme
     val descripcion = if (aviso.plato == null) stringResource(aviso.mensaje)
@@ -129,7 +229,7 @@ private fun TarjetaNotificacion(aviso: AvisoCliente, nueva: Boolean) {
         shadowElevation = 1.dp
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -149,7 +249,7 @@ private fun TarjetaNotificacion(aviso: AvisoCliente, nueva: Boolean) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         stringResource(estilo.titulo),
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f, fill = false),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = esquema.onSurface,
@@ -157,13 +257,9 @@ private fun TarjetaNotificacion(aviso: AvisoCliente, nueva: Boolean) {
                         overflow = TextOverflow.Ellipsis
                     )
                     if (nueva) {
-                        Text(
-                            stringResource(R.string.notif_nueva),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = esquema.primary,
-                            modifier = Modifier.padding(start = 8.dp, end = 4.dp)
+                        Box(
+                            Modifier.padding(start = 6.dp).size(8.dp).clip(CircleShape).background(esquema.primary)
                         )
-                        Box(Modifier.size(8.dp).clip(CircleShape).background(esquema.primary))
                     }
                 }
                 Text(
@@ -180,6 +276,14 @@ private fun TarjetaNotificacion(aviso: AvisoCliente, nueva: Boolean) {
                         color = esquema.outline
                     )
                 }
+            }
+            IconButton(onClick = onBorrar, modifier = Modifier.size(40.dp)) {
+                Icon(
+                    painterResource(R.drawable.ic_notif_borrar),
+                    contentDescription = stringResource(R.string.notif_borrar),
+                    tint = esquema.outline,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }

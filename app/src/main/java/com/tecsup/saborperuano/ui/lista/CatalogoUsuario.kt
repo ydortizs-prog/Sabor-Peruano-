@@ -172,7 +172,8 @@ internal data class AvisoCliente(
     val mensaje: Int,
     val plato: String? = null,
     val tipo: TipoAvisoCliente? = null,
-    val fecha: Long = 0L
+    val fecha: Long = 0L,
+    val indice: Int = -1
 )
 
 @Composable

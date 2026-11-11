@@ -41,7 +41,9 @@ internal fun ListaScreen(
     avisos: List<AvisoCliente> = emptyList(),
     avisosSinLeer: Boolean = false,
     avisosNoLeidos: Int = 0,
-    onLeerAvisos: () -> Unit = {}
+    onLeerAvisos: () -> Unit = {},
+    onBorrarAviso: (Int) -> Unit = {},
+    onBorrarAvisos: () -> Unit = {}
 ) {
     val estado by viewModel.catalogo.collectAsStateWithLifecycle()
     val sinConexion by viewModel.sinConexion.collectAsStateWithLifecycle()
@@ -187,7 +189,13 @@ internal fun ListaScreen(
         }
     }
 
-    if (avisosAbiertos) PanelNotificaciones(avisos, nuevosAlAbrir, onCerrar = { avisosAbiertos = false })
+    if (avisosAbiertos) PanelNotificaciones(
+        avisos = avisos,
+        nuevos = nuevosAlAbrir,
+        onBorrar = onBorrarAviso,
+        onBorrarTodo = onBorrarAvisos,
+        onCerrar = { avisosAbiertos = false }
+    )
     val plato = platoParaCalificar
     if (plato != null && onCalificar != null) {
         CalificarUsuario(

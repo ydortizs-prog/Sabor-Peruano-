@@ -176,10 +176,14 @@ private fun CatalogoNav(
                 onFavoritoAgregado = avisarFavorito,
                 valoraciones = valoraciones,
                 onCalificar = if (esCliente) preferencias::calificar else null,
-                avisos = actividad.value.avisos.map(AvisoGuardado::aAvisoVisible),
+                avisos = actividad.value.avisos.mapIndexedNotNull { indice, aviso ->
+                    if (aviso.oculto) null else aviso.aAvisoVisible().copy(indice = indice)
+                },
                 avisosSinLeer = actividad.value.sinLeer,
                 avisosNoLeidos = actividad.value.noLeidos,
-                onLeerAvisos = preferencias::marcarAvisosLeidos
+                onLeerAvisos = preferencias::marcarAvisosLeidos,
+                onBorrarAviso = preferencias::ocultarAviso,
+                onBorrarAvisos = preferencias::ocultarTodosLosAvisos
             )
         }
 

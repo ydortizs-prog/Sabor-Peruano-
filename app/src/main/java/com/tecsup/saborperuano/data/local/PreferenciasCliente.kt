@@ -16,7 +16,9 @@ internal enum class TipoAvisoCliente { FAVORITO, CARRITO, WHATSAPP, PEDIDO_GUARD
 internal data class AvisoGuardado(
     val tipo: TipoAvisoCliente,
     val plato: String? = null,
-    val fecha: Long = 0L
+    val fecha: Long = 0L,
+    // Oculto solo en la campana; el historial de pedidos del perfil lo sigue mostrando.
+    val oculto: Boolean = false
 )
 
 @Serializable
@@ -50,7 +52,8 @@ internal class PreferenciasCliente(private val preferencias: SharedPreferences) 
         val nuevo = AvisoGuardado(tipo, plato, System.currentTimeMillis())
         val ultimo = actual.avisos.firstOrNull()
         // Si se repite el mismo aviso seguido (p. ej. agregar el mismo plato), se actualiza en vez de duplicarse.
-        val repetido = ultimo != null && ultimo.tipo == tipo && ultimo.plato == plato && actual.noLeidos > 0
+        val repetido = ultimo != null && !ultimo.oculto && ultimo.tipo == tipo && ultimo.plato == plato &&
+            actual.noLeidos > 0
         val previos = if (repetido) actual.avisos.drop(1) else actual.avisos
         val noLeidos = if (repetido) actual.noLeidos else actual.noLeidos + 1
         guardarActividad(
@@ -67,6 +70,24 @@ internal class PreferenciasCliente(private val preferencias: SharedPreferences) 
         if (actual.sinLeer || actual.noLeidos > 0) {
             guardarActividad(actual.copy(sinLeer = false, noLeidos = 0))
         }
+    }
+
+    fun ocultarAviso(indice: Int) {
+        val actual = _actividad.value
+        if (indice !in actual.avisos.indices) return
+        val avisos = actual.avisos.mapIndexed { i, aviso -> if (i == indice) aviso.copy(oculto = true) else aviso }
+        guardarActividad(actual.copy(avisos = avisos))
+    }
+
+    fun ocultarTodosLosAvisos() {
+        val actual = _actividad.value
+        guardarActividad(
+            ActividadGuardada(
+                avisos = actual.avisos.map { it.copy(oculto = true) },
+                sinLeer = false,
+                noLeidos = 0
+            )
+        )
     }
 
     private fun leerActividad(): ActividadGuardada {
