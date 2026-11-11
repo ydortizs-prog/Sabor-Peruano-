@@ -36,10 +36,12 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.tecsup.saborperuano.R
+import com.tecsup.saborperuano.data.local.TipoAvisoCliente
 
 @Composable
 internal fun EncabezadoUsuario(
     sinLeer: Boolean,
+    cantidad: Int = 0,
     onAbrirAvisos: () -> Unit
 ) {
     Row(
@@ -59,7 +61,12 @@ internal fun EncabezadoUsuario(
             )
         }
         IconButton(onClick = onAbrirAvisos) {
-            BadgedBox(badge = { if (sinLeer) Badge() }) {
+            BadgedBox(badge = {
+                when {
+                    cantidad > 0 -> Badge { Text(if (cantidad > 9) "9+" else cantidad.toString()) }
+                    sinLeer -> Badge()
+                }
+            }) {
                 IconoMenu(R.drawable.ic_menu_campana, R.string.catalogo_actividad)
             }
         }
@@ -161,7 +168,12 @@ private fun IconoPestana(icono: Int, etiqueta: Int, mostrarEtiqueta: Boolean) {
 private fun etiquetaPestana(mostrar: Boolean, etiqueta: Int): (@Composable () -> Unit)? =
     if (mostrar) ({ Text(stringResource(etiqueta)) }) else null
 
-internal data class AvisoCliente(val mensaje: Int, val plato: String? = null)
+internal data class AvisoCliente(
+    val mensaje: Int,
+    val plato: String? = null,
+    val tipo: TipoAvisoCliente? = null,
+    val fecha: Long = 0L
+)
 
 @Composable
 internal fun ActividadUsuario(

@@ -152,7 +152,7 @@ private fun CatalogoNav(
         if (esCliente) preferencias.agregarAviso(TipoAvisoCliente.FAVORITO, nombre)
     }
 
-    val destinoInicial: Any = if (esCliente) DestinoLista else DestinoAdmin
+    val destinoInicial: Any = DestinoLista
 
     NavHost(navController, startDestination = destinoInicial, modifier = modifier) {
         composable<DestinoLista> {
@@ -178,6 +178,7 @@ private fun CatalogoNav(
                 onCalificar = if (esCliente) preferencias::calificar else null,
                 avisos = actividad.value.avisos.map(AvisoGuardado::aAvisoVisible),
                 avisosSinLeer = actividad.value.sinLeer,
+                avisosNoLeidos = actividad.value.noLeidos,
                 onLeerAvisos = preferencias::marcarAvisosLeidos
             )
         }
@@ -218,9 +219,7 @@ private fun CatalogoNav(
             composable<DestinoAdmin> {
                 AdminScreen(
                     viewModel = viewModel(factory = AdminViewModel.Factory(appContainer, sesion.uid)),
-                    onVolver = {
-                        navController.navigate(DestinoLista) { launchSingleTop = true }
-                    },
+                    onVolver = { navController.navigateUp() },
                     perfil = { onAbrirPedidos ->
                         PerfilUsuarioScreen(
                             sesion = sesion,
@@ -287,7 +286,7 @@ private fun AvisoGuardado.aAvisoVisible(): AvisoCliente {
         TipoAvisoCliente.PEDIDO_GUARDADO -> R.string.catalogo_aviso_pedido
         TipoAvisoCliente.PEDIDO_WHATSAPP -> R.string.pedido_aviso_whatsapp_guardado
     }
-    return AvisoCliente(mensaje, plato)
+    return AvisoCliente(mensaje, plato, tipo, fecha)
 }
 
 @Composable

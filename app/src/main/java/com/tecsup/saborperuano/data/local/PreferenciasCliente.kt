@@ -13,12 +13,17 @@ import kotlinx.serialization.json.Json
 internal enum class TipoAvisoCliente { FAVORITO, CARRITO, WHATSAPP, PEDIDO_GUARDADO, PEDIDO_WHATSAPP }
 
 @Serializable
-internal data class AvisoGuardado(val tipo: TipoAvisoCliente, val plato: String? = null)
+internal data class AvisoGuardado(
+    val tipo: TipoAvisoCliente,
+    val plato: String? = null,
+    val fecha: Long = 0L
+)
 
 @Serializable
 internal data class ActividadGuardada(
     val avisos: List<AvisoGuardado> = emptyList(),
-    val sinLeer: Boolean = false
+    val sinLeer: Boolean = false,
+    val noLeidos: Int = 0
 )
 
 internal class PreferenciasCliente(private val preferencias: SharedPreferences) {
@@ -41,12 +46,27 @@ internal class PreferenciasCliente(private val preferencias: SharedPreferences) 
     val actividad = _actividad.asStateFlow()
 
     fun agregarAviso(tipo: TipoAvisoCliente, plato: String? = null) {
-        val avisos = (listOf(AvisoGuardado(tipo, plato)) + _actividad.value.avisos).take(12)
-        guardarActividad(ActividadGuardada(avisos, sinLeer = true))
+        val actual = _actividad.value
+        val nuevo = AvisoGuardado(tipo, plato, System.currentTimeMillis())
+        val ultimo = actual.avisos.firstOrNull()
+        // Si se repite el mismo aviso seguido (p. ej. agregar el mismo plato), se actualiza en vez de duplicarse.
+        val repetido = ultimo != null && ultimo.tipo == tipo && ultimo.plato == plato && actual.noLeidos > 0
+        val previos = if (repetido) actual.avisos.drop(1) else actual.avisos
+        val noLeidos = if (repetido) actual.noLeidos else actual.noLeidos + 1
+        guardarActividad(
+            ActividadGuardada(
+                avisos = (listOf(nuevo) + previos).take(MAX_AVISOS),
+                sinLeer = true,
+                noLeidos = noLeidos.coerceAtMost(MAX_AVISOS)
+            )
+        )
     }
 
     fun marcarAvisosLeidos() {
-        if (_actividad.value.sinLeer) guardarActividad(_actividad.value.copy(sinLeer = false))
+        val actual = _actividad.value
+        if (actual.sinLeer || actual.noLeidos > 0) {
+            guardarActividad(actual.copy(sinLeer = false, noLeidos = 0))
+        }
     }
 
     private fun leerActividad(): ActividadGuardada {
@@ -82,5 +102,6 @@ internal class PreferenciasCliente(private val preferencias: SharedPreferences) 
     private companion object {
         const val PREFIJO = "valoracion_"
         const val CLAVE_ACTIVIDAD = "actividad_cliente"
+        const val MAX_AVISOS = 12
     }
 }

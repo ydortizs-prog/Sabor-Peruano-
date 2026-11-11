@@ -31,4 +31,19 @@
     <string name="perfil_modo_oscuro">Modo oscuro</string>
     <string name="perfil_confirmar_salida">¿Quieres cerrar tu sesión?</string>
     <string name="catalogo_error_favorito">No se pudo actualizar el favorito. Inténtalo de nuevo.</string>
+    <string name="notif_titulo_favorito">Guardado en favoritos</string>
+    <string name="notif_titulo_carrito">Carrito actualizado</string>
+    <string name="notif_titulo_whatsapp">Pedido enviado por WhatsApp</string>
+    <string name="notif_titulo_pedido">Pedido confirmado</string>
+    <string name="notif_titulo_pedido_whatsapp">Pedido de WhatsApp guardado</string>
+    <string name="notif_titulo_general">Aviso</string>
+    <string name="notif_resumen_nuevas">Tienes %1$d sin leer</string>
+    <string name="notif_resumen_al_dia">Estás al día</string>
+    <string name="notif_vacio_detalle">Aquí verás tus favoritos, el carrito y tus pedidos.</string>
+    <string name="notif_cerrar">Cerrar notificaciones</string>
+    <string name="notif_nueva">Nueva</string>
+    <string name="notif_ahora">Ahora</string>
+    <string name="notif_hace_minutos">Hace %1$d min</string>
+    <string name="notif_hace_horas">Hace %1$d h</string>
+    <string name="notif_hace_dias">Hace %1$d d</string>
 </resources>

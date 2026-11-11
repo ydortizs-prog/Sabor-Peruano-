@@ -40,6 +40,7 @@ internal fun ListaScreen(
     onCalificar: ((String, Int?) -> Unit)? = null,
     avisos: List<AvisoCliente> = emptyList(),
     avisosSinLeer: Boolean = false,
+    avisosNoLeidos: Int = 0,
     onLeerAvisos: () -> Unit = {}
 ) {
     val estado by viewModel.catalogo.collectAsStateWithLifecycle()
@@ -49,10 +50,12 @@ internal fun ListaScreen(
     val errorFavorito by viewModel.errorFavorito.collectAsStateWithLifecycle()
 
     var avisosAbiertos by rememberSaveable { mutableStateOf(false) }
+    var nuevosAlAbrir by rememberSaveable { mutableStateOf(0) }
     var platoParaCalificar by androidx.compose.runtime.remember { mutableStateOf<Item?>(null) }
     val encabezado: @Composable () -> Unit = {
         if (esCliente) {
-            EncabezadoUsuario(avisosSinLeer) {
+            EncabezadoUsuario(avisosSinLeer, avisosNoLeidos) {
+                nuevosAlAbrir = avisosNoLeidos
                 onLeerAvisos()
                 avisosAbiertos = true
             }
@@ -184,7 +187,7 @@ internal fun ListaScreen(
         }
     }
 
-    if (avisosAbiertos) ActividadUsuario(avisos, onCerrar = { avisosAbiertos = false })
+    if (avisosAbiertos) PanelNotificaciones(avisos, nuevosAlAbrir, onCerrar = { avisosAbiertos = false })
     val plato = platoParaCalificar
     if (plato != null && onCalificar != null) {
         CalificarUsuario(
