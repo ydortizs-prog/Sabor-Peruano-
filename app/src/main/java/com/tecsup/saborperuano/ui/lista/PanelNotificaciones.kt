@@ -37,6 +37,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.tecsup.saborperuano.R
 import com.tecsup.saborperuano.data.local.TipoAvisoCliente
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 /**
  * Ventana propia de notificaciones del cliente.
@@ -218,12 +222,34 @@ private fun SinNotificaciones() {
 @Composable
 private fun haceCuanto(fecha: Long, ahora: Long): String {
     val minutos = ((ahora - fecha).coerceAtLeast(0L) / 60_000L).toInt()
-    return when {
+    val relativo = when {
         minutos < 1 -> stringResource(R.string.notif_ahora)
         minutos < 60 -> stringResource(R.string.notif_hace_minutos, minutos)
-        minutos < 60 * 24 -> stringResource(R.string.notif_hace_horas, minutos / 60)
-        else -> stringResource(R.string.notif_hace_dias, minutos / (60 * 24))
+        else -> null
     }
+    val momento = fechaYHora(fecha, ahora)
+    return if (relativo != null) "$relativo · $momento" else momento
+}
+
+/** Ejemplos: "Hoy, 8:15 p. m.", "Ayer, 3:20 p. m.", "lun 9 nov, 10:05 a. m.", "15 oct 2025, 9:00 a. m." */
+@Composable
+private fun fechaYHora(fecha: Long, ahora: Long): String {
+    val local = Locale.forLanguageTag("es-PE")
+    val aviso = Calendar.getInstance().apply { timeInMillis = fecha }
+    val hoy = Calendar.getInstance().apply { timeInMillis = ahora }
+    val ayer = (hoy.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -1) }
+    fun mismoDia(a: Calendar, b: Calendar) =
+        a.get(Calendar.YEAR) == b.get(Calendar.YEAR) && a.get(Calendar.DAY_OF_YEAR) == b.get(Calendar.DAY_OF_YEAR)
+
+    val hora = SimpleDateFormat("h:mm a", local).format(Date(fecha))
+    val dia = when {
+        mismoDia(aviso, hoy) -> stringResource(R.string.notif_hoy)
+        mismoDia(aviso, ayer) -> stringResource(R.string.notif_ayer)
+        aviso.get(Calendar.YEAR) == hoy.get(Calendar.YEAR) ->
+            SimpleDateFormat("EEE d MMM", local).format(Date(fecha))
+        else -> SimpleDateFormat("d MMM yyyy", local).format(Date(fecha))
+    }
+    return "$dia, $hora"
 }
 
 private data class EstiloAviso(

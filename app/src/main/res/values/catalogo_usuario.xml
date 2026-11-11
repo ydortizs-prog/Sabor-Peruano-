@@ -46,4 +46,6 @@
     <string name="notif_hace_minutos">Hace %1$d min</string>
     <string name="notif_hace_horas">Hace %1$d h</string>
     <string name="notif_hace_dias">Hace %1$d d</string>
+    <string name="notif_hoy">Hoy</string>
+    <string name="notif_ayer">Ayer</string>
 </resources>
