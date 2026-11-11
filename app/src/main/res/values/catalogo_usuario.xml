@@ -17,7 +17,7 @@
     <string name="catalogo_calificar_titulo">Calificar %1$s</string>
     <string name="catalogo_calificar_privado">Tu valoración se guarda en este dispositivo.</string>
     <string name="catalogo_guardar_valoracion">Guardar valoración</string>
-    <string name="catalogo_buscar_usuario">Buscar platillos peruanos…</string>
+    <string name="catalogo_buscar_usuario">Buscar platos…</string>
     <string name="catalogo_filtros">Filtrar por categoría</string>
     <string name="catalogo_quitar_valoracion">Quitar valoración</string>
     <string name="perfil_marca">SABOR PERUANO</string>

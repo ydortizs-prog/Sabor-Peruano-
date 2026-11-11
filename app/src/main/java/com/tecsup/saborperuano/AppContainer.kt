@@ -10,6 +10,7 @@ import com.tecsup.saborperuano.data.remote.RetrofitClient
 import com.tecsup.saborperuano.data.repository.CarritoRepository
 import com.tecsup.saborperuano.data.repository.ItemRepository
 import com.tecsup.saborperuano.data.repository.ItemRepositoryImpl
+import com.tecsup.saborperuano.data.traduccion.TraductorMlKit
 import com.tecsup.saborperuano.data.repository.MenuLocalRepository
 import com.tecsup.saborperuano.data.repository.PedidoRepository
 import com.tecsup.saborperuano.notification.Notificador
@@ -33,7 +34,7 @@ class AppContainer private constructor(private val context: Context) {
         }
 
     val itemRepository: ItemRepository =
-        ItemRepositoryImpl(RetrofitClient.api, database, preciosDePrueba)
+        ItemRepositoryImpl(RetrofitClient.api, database, preciosDePrueba, TraductorMlKit())
 
     internal val menuLocal = MenuLocalRepository(database)
 

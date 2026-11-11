@@ -43,7 +43,11 @@
     <string name="login_salir">Cerrar sesión</string>
     <string name="login_reintentar_sesion">Reintentar recuperar sesión</string>
     <string name="catalogo_marca">COCINA PERUANA</string>
-    <string name="catalogo_bajada">Elige tus platos peruanos favoritos.</string>
+    <string name="catalogo_bajada">Elige tus platos de mar favoritos.</string>
+    <string name="catalogo_pescados">Pescados</string>
+    <string name="catalogo_mariscos">Mariscos</string>
+    <string name="catalogo_otros">Otros</string>
+    <string name="detalle_preparacion">Preparación</string>
     <string name="catalogo_buscar">Buscar platillos</string>
     <string name="catalogo_todos">Todos</string>
     <string name="catalogo_entradas">Entradas</string>

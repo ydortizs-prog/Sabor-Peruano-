@@ -30,11 +30,37 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
 
-internal enum class Categoria(val etiqueta: Int, val ids: Set<String>) {
+/** Filtros del catálogo (Seafood): se deciden por palabras del nombre, en español o inglés y sin tildes. */
+internal enum class Categoria(val etiqueta: Int, val palabras: Set<String>) {
     TODOS(R.string.catalogo_todos, emptySet()),
-    ENTRADAS(R.string.catalogo_entradas, setOf("causa-limena")),
-    POLLO(R.string.catalogo_pollo, setOf("aji-de-gallina", "arroz-con-pollo")),
-    CARNE(R.string.catalogo_carne, setOf("lomo-saltado"))
+    PESCADOS(
+        R.string.catalogo_pescados,
+        setOf(
+            "pescado", "salmon", "bacalao", "atun", "abadejo", "eglefino", "caballa", "sardina", "trucha", "lubina",
+            "rape", "tilapia", "fletan", "arenque", "pargo", "lenguado", "anchoa", "boqueron", "merluza",
+            "fish", "cod", "tuna", "haddock", "mackerel", "sardine", "trout", "herring", "kedgeree", "escovitch"
+        )
+    ),
+    MARISCOS(
+        R.string.catalogo_mariscos,
+        setOf(
+            "camaron", "gamba", "langostino", "cangrejo", "mejillon", "almeja", "vieira", "calamar", "ostra",
+            "langosta", "pulpo", "marisco", "paella",
+            "prawn", "shrimp", "crab", "mussel", "clam", "scallop", "squid", "oyster", "lobster", "octopus"
+        )
+    ),
+    OTROS(R.string.catalogo_otros, emptySet());
+
+    fun incluye(plato: Item): Boolean = when (this) {
+        TODOS -> true
+        OTROS -> Categoria.entries.none { it.palabras.isNotEmpty() && it.coincide(plato) }
+        else -> coincide(plato)
+    }
+
+    private fun coincide(plato: Item): Boolean {
+        val nombre = plato.titulo.paraBusqueda()
+        return palabras.any { nombre.contains(it, ignoreCase = true) }
+    }
 }
 
 private val marcasDiacriticas = Regex("\\p{M}+")
@@ -78,7 +104,7 @@ class ListaViewModel(
                 is UiState.Exito -> {
                     val termino = texto.trim().paraBusqueda()
                     val platos = actual.datos.filter { plato ->
-                        (seleccion == Categoria.TODOS || plato.id in seleccion.ids) &&
+                        seleccion.incluye(plato) &&
                             (plato.titulo.paraBusqueda().contains(termino, ignoreCase = true) ||
                                 plato.subtitulo.paraBusqueda().contains(termino, ignoreCase = true))
                     }

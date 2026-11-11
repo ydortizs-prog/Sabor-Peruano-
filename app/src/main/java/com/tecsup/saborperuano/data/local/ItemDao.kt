@@ -48,4 +48,8 @@ interface ItemDao {
 
     @Query("DELETE FROM items WHERE editadoLocal = 0")
     suspend fun borrarCacheRemota()
+
+    /** Quita los platos descargados antes que ya no vienen en la API (no toca ediciones locales). */
+    @Query("DELETE FROM items WHERE editadoLocal = 0 AND id NOT IN (:ids)")
+    suspend fun borrarAusentes(ids: List<String>)
 }

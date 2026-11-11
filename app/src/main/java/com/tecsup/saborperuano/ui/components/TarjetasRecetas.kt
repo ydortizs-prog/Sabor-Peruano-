@@ -2,6 +2,7 @@ package com.tecsup.saborperuano.ui.components
 
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.LruCache
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
@@ -22,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.tecsup.saborperuano.R
 import com.tecsup.saborperuano.domain.model.Item
 import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -65,8 +68,9 @@ internal fun TarjetaPlato(
         },
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        val proporcion = if (ampliada && !estiloCliente) 1.5f else 1.8f
-        FotoReceta(plato, Modifier.fillMaxWidth().aspectRatio(proporcion))
+        // Foto más baja para que la tarjeta muestre nombre, precio y botones sin tanto desplazamiento.
+        val proporcion = if (ampliada && !estiloCliente) 1.8f else 2.2f
+        FotoReceta(plato, Modifier.fillMaxWidth().aspectRatio(proporcion).heightIn(max = 180.dp))
         Column(
             modifier = Modifier.fillMaxWidth().padding(
                 if (ampliada && !estiloCliente) 20.dp else 16.dp
@@ -163,6 +167,15 @@ internal fun FotoReceta(receta: Item, modifier: Modifier = Modifier) {
         Image(it, contentDescription = null, modifier = modifier, contentScale = ContentScale.Crop)
         return
     }
+    val remota = receta.imagenUrl?.takeIf { it.startsWith("https://") || it.startsWith("http://") }
+    val fotoRemota by produceState(FotosRemotas.enCache(remota), remota) {
+        if (remota == null || value != null) return@produceState
+        value = withContext(Dispatchers.IO) { FotosRemotas.descargar(remota) }
+    }
+    fotoRemota?.let {
+        Image(it, contentDescription = null, modifier = modifier, contentScale = ContentScale.Crop)
+        return
+    }
     val recurso = when (receta.id) {
         "aji-de-gallina" -> R.drawable.platillo_aji
         "lomo-saltado" -> R.drawable.platillo_lomo
@@ -183,5 +196,38 @@ internal fun FotoReceta(receta: Item, modifier: Modifier = Modifier) {
             contentScale = ContentScale.Crop,
             modifier = modifier
         )
+    }
+}
+
+/** Descarga las fotos de TheMealDB y guarda en memoria las últimas para no repetir descargas. */
+private object FotosRemotas {
+    private val cache = LruCache<String, ImageBitmap>(40)
+
+    fun enCache(url: String?): ImageBitmap? = url?.let { cache.get(it) }
+
+    fun descargar(url: String): ImageBitmap? {
+        return try {
+            val conexion = URL(url).openConnection() as HttpURLConnection
+            conexion.connectTimeout = 10_000
+            conexion.readTimeout = 15_000
+            try {
+                if (conexion.responseCode !in 200..299) return null
+                val bytes = conexion.inputStream.use { it.readBytes() }
+                val limites = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, limites)
+                if (limites.outWidth <= 0 || limites.outHeight <= 0) return null
+                var muestra = 1
+                while (maxOf(limites.outWidth, limites.outHeight) / muestra > 800) muestra *= 2
+                val opciones = BitmapFactory.Options().apply { inSampleSize = muestra }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opciones)?.asImageBitmap()
+                    ?.also { cache.put(url, it) }
+            } finally {
+                conexion.disconnect()
+            }
+        } catch (_: IOException) {
+            null
+        } catch (_: SecurityException) {
+            null
+        }
     }
 }

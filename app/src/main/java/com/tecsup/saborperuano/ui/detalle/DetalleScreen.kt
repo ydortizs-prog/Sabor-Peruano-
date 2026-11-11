@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -89,7 +90,10 @@ private fun FichaProducto(
             .padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        FotoReceta(plato, Modifier.fillMaxWidth().aspectRatio(1.8f).clip(MaterialTheme.shapes.large))
+        FotoReceta(
+            plato,
+            Modifier.fillMaxWidth().aspectRatio(1.6f).heightIn(max = 240.dp).clip(MaterialTheme.shapes.large)
+        )
         Text(plato.titulo, style = MaterialTheme.typography.headlineMedium)
         Text(plato.subtitulo, style = MaterialTheme.typography.bodyLarge)
         OutlinedButton(onClick = onAlternarFavorito) {
@@ -113,6 +117,10 @@ private fun FichaProducto(
         }
         TextButton(onClick = onAbrirCarrito) {
             Text(stringResource(R.string.carrito_titulo))
+        }
+        if (plato.descripcion.isNotBlank()) {
+            Text(stringResource(R.string.detalle_preparacion), style = MaterialTheme.typography.titleMedium)
+            Text(plato.descripcion, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
