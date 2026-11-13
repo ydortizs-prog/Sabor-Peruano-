@@ -45,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -71,12 +72,16 @@ internal fun PanelNotificaciones(
 ) {
     var confirmarBorrado by rememberSaveable { mutableStateOf(false) }
 
+    // La ventana nunca pasa del 85 % del alto de la pantalla, así los botones siempre se ven.
+    val altoMaximo = (LocalConfiguration.current.screenHeightDp * 0.85f).dp
+
     Dialog(
         onDismissRequest = onCerrar,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            modifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 480.dp).fillMaxWidth(),
+            modifier = Modifier.padding(horizontal = 24.dp).widthIn(max = 480.dp).fillMaxWidth()
+                .heightIn(max = altoMaximo),
             shape = RoundedCornerShape(28.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,
@@ -117,8 +122,9 @@ internal fun PanelNotificaciones(
                 if (avisos.isEmpty()) {
                     SinNotificaciones()
                 } else {
+                    // La lista usa solo el espacio que sobra y se desplaza por dentro.
                     LazyColumn(
-                        modifier = Modifier.heightIn(max = 420.dp),
+                        modifier = Modifier.weight(1f, fill = false),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         itemsIndexed(

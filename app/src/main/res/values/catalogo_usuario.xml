@@ -40,7 +40,7 @@
     <string name="notif_resumen_nuevas">Tienes %1$d sin leer</string>
     <string name="notif_resumen_al_dia">Estás al día</string>
     <string name="notif_vacio_detalle">Aquí verás tus favoritos, el carrito y tus pedidos.</string>
-    <string name="notif_cerrar">Cerrar notificaciones</string>
+    <string name="notif_cerrar">Cerrar</string>
     <string name="notif_nueva">Nueva</string>
     <string name="notif_ahora">Ahora</string>
     <string name="notif_hace_minutos">Hace %1$d min</string>
