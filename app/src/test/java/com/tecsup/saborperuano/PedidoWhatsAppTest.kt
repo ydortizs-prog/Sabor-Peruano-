@@ -7,6 +7,7 @@ import com.tecsup.saborperuano.domain.model.LineaCarrito
 import com.tecsup.saborperuano.ui.carrito.DatosPedido
 import com.tecsup.saborperuano.ui.carrito.Entrega
 import com.tecsup.saborperuano.ui.carrito.EnvioPedido
+import com.tecsup.saborperuano.ui.carrito.MetodoPago
 import com.tecsup.saborperuano.ui.carrito.ResumenCarrito
 import com.tecsup.saborperuano.ui.carrito.enlaceWhatsApp
 import com.tecsup.saborperuano.ui.carrito.mensajeParaWhatsApp
@@ -34,6 +35,20 @@ class PedidoWhatsAppTest {
         assertTrue(mensaje.contains("2 Ají de gallina"))
         assertTrue(mensaje.contains("Número de pedido: pedido-prueba"))
         assertFalse(mensaje.contains("Dirección:"))
+    }
+
+    @Test
+    fun mensajeIncluyeElMetodoDePagoElegido() {
+        val contacto = DatosPedido(nombre = "Cliente", telefono = "999111222")
+        val resumen = ResumenCarrito(listOf(LineaCarrito("lomo-saltado", "Lomo saltado", 2200, 1)))
+
+        val yape = mensajeParaWhatsApp(contacto.copy(metodoPago = MetodoPago.YAPE), resumen)
+        val efectivo = mensajeParaWhatsApp(contacto.copy(metodoPago = MetodoPago.EFECTIVO), resumen)
+
+        assertTrue(yape.contains("Método de pago: Yape"))
+        assertTrue(yape.contains("Coordinar el pago por Yape con el restaurante."))
+        assertTrue(efectivo.contains("Método de pago: Efectivo"))
+        assertFalse(efectivo.contains("Coordinar el pago por Yape"))
     }
 
     @Test

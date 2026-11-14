@@ -6,6 +6,9 @@ import com.tecsup.saborperuano.data.local.AppDatabase
 import com.tecsup.saborperuano.data.mapper.aEntity
 import com.tecsup.saborperuano.data.mapper.aModelo
 import com.tecsup.saborperuano.data.remote.ApiService
+import com.tecsup.saborperuano.data.remote.CATEGORIA_TEMA
+import com.tecsup.saborperuano.data.traduccion.SinTraduccion
+import com.tecsup.saborperuano.data.traduccion.Traductor
 import com.tecsup.saborperuano.domain.model.Item
 import java.io.IOException
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -18,7 +21,8 @@ import retrofit2.HttpException
 class ItemRepositoryImpl(
     private val api: ApiService,
     private val database: AppDatabase,
-    private val preciosDePrueba: Map<String, Int> = emptyMap()
+    private val preciosDePrueba: Map<String, Int> = emptyMap(),
+    private val traductor: Traductor = SinTraduccion
 ) : ItemRepository {
     private val dao = database.itemDao()
     private val cambiosCatalogo = Mutex()
@@ -33,30 +37,45 @@ class ItemRepositoryImpl(
 
     override suspend fun refrescar(): Result<Int> = ejecutarPeticion {
         cambiosCatalogo.withLock {
-            val recetas = api.listar()
+            // Los nombres se guardan en Room ya traducidos: así se ven y se buscan en español, incluso sin internet.
+            val recetas = api.listar(CATEGORIA_TEMA).meals.orEmpty()
+                .map { it.copy(strMeal = traductor.aEspanol(it.strMeal)) }
             database.withTransaction {
                 val idsFavoritos = dao.idsFavoritos().toSet()
-                dao.guardarTodos(recetas.map { it.aEntity(esFavorito = it.id in idsFavoritos) })
+                val idsEditados = dao.idsEditadosLocalmente().toSet()
+                if (recetas.isNotEmpty()) dao.borrarAusentes(recetas.map { it.idMeal })
+                val actualizables = recetas.filterNot { it.idMeal in idsEditados }
+                dao.guardarTodos(actualizables.map { it.aEntity(esFavorito = it.idMeal in idsFavoritos) })
+                actualizables.size
             }
-            recetas.size
         }
     }
 
     override suspend fun obtenerDetalle(id: String): Result<Item> = ejecutarPeticion {
-        val detalle = api.obtenerDetalle(id).aModelo()
+        val local = dao.buscar(id)
+        if (local?.retiradoLocal == true) throw NoSuchElementException()
+        if (local?.editadoLocal == true) return@ejecutarPeticion local.aModelo()
+        val remoto = api.obtenerDetalle(id).meals?.firstOrNull() ?: throw NoSuchElementException()
+        val detalle = remoto.copy(
+            strMeal = traductor.aEspanol(remoto.strMeal),
+            strInstructions = remoto.strInstructions?.let { traductor.aEspanol(it) }
+        ).aModelo()
         detalle.copy(
             esFavorito = dao.esFavorito(id),
             precioCentimos = detalle.precioCentimos ?: dao.precioCentimos(id)
         ).conPrecioDePrueba()
     }
 
-    override suspend fun alternarFavorito(id: String) = dao.alternarFavorito(id)
+    override suspend fun alternarFavorito(id: String): Boolean = database.withTransaction {
+        dao.alternarFavorito(id)
+        dao.esFavorito(id)
+    }
 
     override suspend fun cantidadGuardada(): Int = dao.contar()
 
     override suspend fun cantidadFavoritos(): Int = dao.contarFavoritos()
 
-    override suspend fun limpiarCache() = cambiosCatalogo.withLock { dao.borrarTodo() }
+    override suspend fun limpiarCache() = cambiosCatalogo.withLock { dao.borrarCacheRemota() }
 
     private fun Item.conPrecioDePrueba(): Item =
         if (precioCentimos == null) copy(precioCentimos = preciosDePrueba[id]) else this
@@ -64,6 +83,8 @@ class ItemRepositoryImpl(
     private suspend fun <T> ejecutarPeticion(operacion: suspend () -> T): Result<T> = try {
         Result.success(operacion())
     } catch (error: IOException) {
+        Result.failure(error)
+    } catch (error: NoSuchElementException) {
         Result.failure(error)
     } catch (error: HttpException) {
         Result.failure(error)

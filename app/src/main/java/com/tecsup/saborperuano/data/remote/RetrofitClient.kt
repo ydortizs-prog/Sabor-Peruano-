@@ -6,7 +6,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "https://raw.githubusercontent.com/ydortizs-prog/sabor-peruano-api/main/"
+    private const val BASE_URL = "https://www.themealdb.com/api/json/v1/1/"
 
     val api: ApiService by lazy {
         val json = Json { ignoreUnknownKeys = true }

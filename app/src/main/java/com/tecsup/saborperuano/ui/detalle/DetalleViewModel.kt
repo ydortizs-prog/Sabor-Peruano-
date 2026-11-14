@@ -67,13 +67,13 @@ class DetalleViewModel(
         return carrito.agregar(plato, cantidad.value)
     }
 
-    fun alternarFavorito() {
+    fun alternarFavorito(onFavoritoAgregado: () -> Unit = {}) {
         if (estado.value !is UiState.Exito) return
 
         viewModelScope.launch {
             _errorFavorito.value = null
             try {
-                repositorio.alternarFavorito(id)
+                if (repositorio.alternarFavorito(id)) onFavoritoAgregado()
             } catch (_: SQLiteException) {
                 _errorFavorito.value = "No se pudo actualizar el favorito. Inténtalo de nuevo."
             }
@@ -81,7 +81,8 @@ class DetalleViewModel(
     }
 
     private fun mensajeDe(error: Throwable): String = when {
-        error is HttpException && error.code() == 404 -> "No encontramos este platillo."
+        error is NoSuchElementException || error is HttpException && error.code() == 404 ->
+            "No encontramos este platillo."
         error is IOException -> "No se pudo conectar. Revisa tu conexión."
         else -> "No se pudo cargar el platillo."
     }

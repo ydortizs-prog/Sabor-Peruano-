@@ -5,21 +5,24 @@ import androidx.room.Room
 import com.tecsup.saborperuano.data.auth.AuthRepository
 import com.tecsup.saborperuano.data.auth.FirebaseAuthRepository
 import com.tecsup.saborperuano.data.local.AppDatabase
+import com.tecsup.saborperuano.data.local.PreferenciasCliente
 import com.tecsup.saborperuano.data.remote.RetrofitClient
 import com.tecsup.saborperuano.data.repository.CarritoRepository
 import com.tecsup.saborperuano.data.repository.ItemRepository
 import com.tecsup.saborperuano.data.repository.ItemRepositoryImpl
+import com.tecsup.saborperuano.data.traduccion.TraductorMlKit
+import com.tecsup.saborperuano.data.repository.MenuLocalRepository
 import com.tecsup.saborperuano.data.repository.PedidoRepository
 import com.tecsup.saborperuano.notification.Notificador
 import com.tecsup.saborperuano.notification.NotificadorAndroid
 import kotlinx.serialization.json.Json
 
-class AppContainer private constructor(context: Context) {
+class AppContainer private constructor(private val context: Context) {
     private val database = Room.databaseBuilder(
         context,
         AppDatabase::class.java,
         "sabor-peruano.db"
-    ).addMigrations(AppDatabase.MIGRACION_1_2).build()
+    ).addMigrations(AppDatabase.MIGRACION_1_2, AppDatabase.MIGRACION_2_3).build()
 
     private val preciosDePrueba: Map<String, Int> =
         if ("precios-prueba.json" in context.assets.list("").orEmpty()) {
@@ -31,9 +34,14 @@ class AppContainer private constructor(context: Context) {
         }
 
     val itemRepository: ItemRepository =
-        ItemRepositoryImpl(RetrofitClient.api, database, preciosDePrueba)
+        ItemRepositoryImpl(RetrofitClient.api, database, preciosDePrueba, TraductorMlKit())
+
+    internal val menuLocal = MenuLocalRepository(database)
 
     fun crearCarritoDeSesion(): CarritoRepository = CarritoRepository()
+
+    internal fun preferenciasCliente(uid: String): PreferenciasCliente =
+        PreferenciasCliente(context.getSharedPreferences("cliente_$uid", Context.MODE_PRIVATE))
 
     val authRepository: AuthRepository by lazy { FirebaseAuthRepository() }
 
