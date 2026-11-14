@@ -15,7 +15,9 @@
     <string name="login_recuperar_error">No pudimos solicitar el enlace. Inténtalo de nuevo más tarde.</string>
     <string name="login_recuperar_listo">Entendido</string>
     <string name="login_registrate">Regístrate</string>
+    <string name="login_primera_vez">¿Primera vez en Sabor Peruano?</string>
     <string name="registro_titulo">Crear cuenta</string>
+    <string name="registro_subtitulo">Únete a Sabor Peruano en segundos</string>
     <string name="registro_nombre">Nombre</string>
     <string name="registro_confirmar_clave">Confirmar contraseña</string>
     <string name="registro_enviando">Creando tu cuenta…</string>

@@ -65,5 +65,10 @@
     <string name="welcome_marca">SABOR\nPERUANO</string>
     <string name="welcome_saludo">¡Qué gusto tenerte aquí!</string>
     <string name="welcome_frase">Comida criolla hasta tu puerta</string>
+    <string name="welcome_preparando">Preparando tu mesa…</string>
+    <string name="welcome_hecho_peru">HECHO EN PERÚ</string>
+    <string name="welcome_ventaja_menu">Explora el menú</string>
+    <string name="welcome_ventaja_favoritos">Guarda favoritos</string>
+    <string name="welcome_ventaja_pedido">Pide fácil</string>
     <string name="welcome_moto_descripcion">Repartidor en moto con una caja roja</string>
 </resources>

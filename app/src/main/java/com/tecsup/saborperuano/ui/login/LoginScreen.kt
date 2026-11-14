@@ -22,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -41,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -89,8 +91,8 @@ fun LoginScreen(viewModel: LoginViewModel, modifier: Modifier = Modifier) {
         ) {
             Column(
                 modifier = Modifier.widthIn(max = 440.dp).fillMaxWidth()
-                    .verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
@@ -100,15 +102,15 @@ fun LoginScreen(viewModel: LoginViewModel, modifier: Modifier = Modifier) {
                     )
                     Text(
                         stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = MaterialTheme.typography.displaySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(12.dp))
                 Text(
                     stringResource(R.string.login_bienvenida),
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 CampoAcceso(
@@ -143,8 +145,9 @@ fun LoginScreen(viewModel: LoginViewModel, modifier: Modifier = Modifier) {
                         }
                     }
                 )
+                // "¿Olvidaste tu contraseña?" alineado a la derecha, debajo de la contraseña.
                 TextButton(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    modifier = Modifier.align(Alignment.End),
                     enabled = !cargando,
                     onClick = {
                         foco.clearFocus()
@@ -153,18 +156,36 @@ fun LoginScreen(viewModel: LoginViewModel, modifier: Modifier = Modifier) {
                         dialogoAbierto = true
                     }
                 ) {
-                    Text(stringResource(R.string.login_olvidaste_clave))
+                    Text(
+                        stringResource(R.string.login_olvidaste_clave),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
                 Button(
                     onClick = iniciarSesion,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    shape = RoundedCornerShape(50),
                     enabled = !cargando
                 ) {
-                    Text(stringResource(R.string.login_entrar), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.login_entrar),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
 
-                TextButton(
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    stringResource(R.string.login_primera_vez),
                     modifier = Modifier.align(Alignment.CenterHorizontally),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    shape = RoundedCornerShape(50),
+                    border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
                     enabled = !cargando,
                     onClick = {
                         foco.clearFocus()
@@ -174,7 +195,11 @@ fun LoginScreen(viewModel: LoginViewModel, modifier: Modifier = Modifier) {
                         registroAbierto = true
                     }
                 ) {
-                    Text(stringResource(R.string.login_registrate))
+                    Text(
+                        stringResource(R.string.login_registrate),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
                 when (val actual = estado) {
